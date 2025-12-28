@@ -34,8 +34,8 @@ local depth = spawner.Create({
 		Delay = 0.01
 	},
 	Damage = {
-		Enabled = false,
-		Range = 150,
+		Enabled = true,
+		Range = 100,
 		Amount = 250
 	},
 	Crucifixion = {
