@@ -2,7 +2,7 @@ local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatt
 local depth = spawner.Create({
 	Entity = {
 		Name = "Depth",
-		Asset = "rbxassetid://11535848347",
+		Asset = "https://github.com/Whatttt23/Scr/raw/main/Depth V1.rbxm",
 		HeightOffset = 5
 	},
 	Lights = {
