@@ -166,7 +166,7 @@ function GetNodesFromRoom(room, reversed)
 	if center then
 		local n = center:Clone()
 		n.Name = "1"
-		n.CFrame += Vector3.new(0, 2, 0)
+		n.CFrame = Vector3.new(0, 0, 0)
 		nodes[#nodes + 1] = n
 	end
 
