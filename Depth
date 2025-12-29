@@ -153,36 +153,44 @@ end
 
 function GetNodesFromRoom(room, reversed)
 	local nodes = {}
+
 	local roomEntrance = room:FindFirstChild("RoomEntrance")
 	if roomEntrance then
 		local n = roomEntrance:Clone()
 		n.Name = "0"
 		n.CFrame -= Vector3.new(0, 3, 0)
-		nodes[1] = n
+		nodes[#nodes + 1] = n
+	end
+
+	local center = room:FindFirstChild(room.Name)
+	if center then
+		local n = center:Clone()
+		n.Name = "1"
+		n.CFrame -= Vector3.new(0, 6, 0)
+		nodes[#nodes + 1] = n
 	end
 
 	local nodesFolder = room:FindFirstChild("PathfindNodes")
 	if nodesFolder then
-		for _, n in nodesFolder:GetChildren() do
+		for _, n in ipairs(nodesFolder:GetChildren()) do
 			nodes[#nodes + 1] = n
 		end
 	end
 
 	local roomExit = room:FindFirstChild("RoomExit")
 	if roomExit then
-		local index = #nodes + 1
 		local n = roomExit:Clone()
-		n.Name = index
+		n.Name = tostring(#nodes + 1)
 		n.CFrame -= Vector3.new(0, 3, 0)
-		nodes[index] = n
+		nodes[#nodes + 1] = n
 	end
 
 	table.sort(nodes, function(a, b)
-        if reversed then
-            return tonumber(a.Name) > tonumber(b.Name)
-        else
-            return tonumber(a.Name) < tonumber(b.Name)
-        end
+		if reversed then
+			return tonumber(a.Name) > tonumber(b.Name)
+		else
+			return tonumber(a.Name) < tonumber(b.Name)
+		end
 	end)
 
 	return nodes
