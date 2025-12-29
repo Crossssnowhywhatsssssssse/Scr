@@ -31,7 +31,7 @@ local function setFOV(targetFov)
 end
 
 local sprintBarBackground = Instance.new("Frame")
-sprintBarBackground.Size = UDim2.new(0.365, 0,0.041, 0)
+sprintBarBackground.Size = UDim2.new(0.36, 0,0.04, 0)
 sprintBarBackground.Position = UDim2.new(0.285, 0,0.916, 0)
 sprintBarBackground.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 sprintBarBackground.BorderSizePixel = 5
@@ -39,7 +39,7 @@ sprintBarBackground.Parent = screenGui
 
 local sprintBar = Instance.new("Frame")
 sprintBar.Size = UDim2.new(1, 0, 1, 0)
-sprintBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sprintBar.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
 sprintBar.BorderSizePixel = 5
 sprintBar.Parent = sprintBarBackground
 
