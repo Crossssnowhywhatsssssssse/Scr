@@ -50,7 +50,7 @@ darkScreen.BackgroundTransparency = 1
 darkScreen.Parent = screenGui
 
 local sprinting = false
-local maxStamina = 100
+local maxStamina = 120
 local currentStamina = maxStamina
 local staminaRegenRate = 10
 local staminaDrainRate = 10
