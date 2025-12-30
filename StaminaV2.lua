@@ -52,7 +52,7 @@ darkScreen.Parent = screenGui
 local sprinting = false
 local maxStamina = 100
 local currentStamina = maxStamina
-local staminaRegenRate = 5
+local staminaRegenRate = 10
 local staminaDrainRate = 10
 local canSprint = true
 
