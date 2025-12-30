@@ -1,4 +1,4 @@
-local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/Depth"))()
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix"))()
 local depth = spawner.Create({
 	Entity = {
 		Name = "Depth",
