@@ -49,7 +49,9 @@ local rush = spawner.Create({
 		Cause = "Nightmare Rush"
 	}
 })
+
 rush:SetCallback("OnSpawned", function()
+		
 local model = rush.Model
     model.Footsteps.Parent = model:FindFirstChildWhichIsA("BasePart")
     model:FindFirstChildWhichIsA("BasePart").Footsteps.PlaybackSpeed = 0.1
@@ -62,4 +64,5 @@ local model = rush.Model
          distort.Parent = model:FindFirstChildWhichIsA("BasePart").Footsteps
          distort.Level = 0.75
 end)
+
 rush:Run()
