@@ -170,6 +170,14 @@ function GetNodesFromRoom(room, reversed)
 		nodes[#nodes + 1] = n
 	end
 
+    local bah = room:FindFirstChild(BlockedDoor)
+	if bah then
+		local n = bah:Clone()
+		n.Name = "1"
+		n.CFrame -= Vector3.new(0, 3, 0)
+		nodes[#nodes + 1] = n
+	end
+
 	local nodesFolder = room:FindFirstChild("PathfindNodes")
 	if nodesFolder then
 		for _, n in ipairs(nodesFolder:GetChildren()) do
