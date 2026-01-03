@@ -62,7 +62,7 @@ local defaultPlayerAttributes = {
 local defaultDebug = {
 	OnSpawned = function() end,
 	OnStartMoving = function() end,
-	OnReachedNode = function() end,
+	OnReachNode = function() end,
 	OnEnterRoom = function() end,
 	OnLookAt = function() end,
 	OnRebounding = function() end,
@@ -170,7 +170,7 @@ function GetNodesFromRoom(room, reversed)
 		nodes[#nodes + 1] = n
 	end
 
-    local bah = room:FindFirstChild(BlockedDoor)
+    local bah = room:FindFirstChild("BlockedDoor")
 	if bah then
 		local n = bah:Clone()
 		n.Name = "1"
@@ -554,11 +554,12 @@ function EntityMoveTo(model, cframe, speed)
 			end
 		end
 	end)
-	repeat RunService.Stepped:Wait() until reached
+	repeat RunService.Stepped:Wait()
+    until reached or not model or not model.Parent
 end
 
 function ApplyConfigDefaults(tbl, defaults)
-    for key, value in defaults do
+    for key, value in pairs(defaults) do
 		if tbl[key] == nil then
             tbl[key] = value
 
@@ -769,7 +770,8 @@ spawner.Run = function(entityTable)
 			end
 			-- Earthquake
 			if config.Earthquake.Enabled then
-				task.defer(moduleScripts.Earthquake, moduleScripts.Main_Game, currentRoom)
+				local currentRoom = GetCurrentRoom(false)
+                task.defer(moduleScripts.Earthquake, moduleScripts.Main_Game, currentRoom)
 			end
 	
 			-- Movement detection handling
@@ -1083,7 +1085,7 @@ end
 -- Main
 localPlayer.CharacterAdded:Connect(OnCharacterAdded)
 
-for name, value in defaultPlayerAttributes do
+for name, value in pairs(defaultPlayerAttributes) do
 	localPlayer:SetAttribute(name, value)
 end
 lastRespawn = tick() - localPlayer:GetAttribute("SpawnProtection")
