@@ -43,6 +43,10 @@ sprintBar.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
 sprintBar.BorderSizePixel = 5
 sprintBar.Parent = sprintBarBackground
 
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(1, 0)
+barCorner.Parent = sprintBar
+
 local darkScreen = Instance.new("Frame")
 darkScreen.Size = UDim2.new(1,0,1,0)
 darkScreen.BackgroundColor3 = Color3.fromRGB(0,0,0)
@@ -70,12 +74,17 @@ local function updateDarkScreen()
 end
 
 local sprintButton = Instance.new("TextButton")
-sprintButton.Size = UDim2.new(0.1, 0, 0.1, 0)
-sprintButton.Position = UDim2.new(0.9, 0, 0.5, 0)
-sprintButton.Text = " "
-sprintButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-sprintButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+sprintButton.Size = UDim2.new(0.1, 0, 0.15, 0)
+sprintButton.Position = UDim2.new(0.9, -50, 0.4, -50)
+sprintButton.Text = "Sprint"
+sprintButton.TextSize = 15
+sprintButton.BackgroundColor3 = Color3.fromRGB(175, 115, 25)
+sprintButton.AutoButtonColor = true
 sprintButton.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = sprintButton
 
 local UIS = game:GetService("UserInputService")
 
@@ -130,8 +139,14 @@ runService.Heartbeat:Connect(function(dt)
             canSprint = false
             player.Character:SetAttribute("SpeedBoost", 0)
             setFOV(NORMAL_FOV)
-
+            
+            local noStamernaSound = Instance.new("Sound",workspace)
+			noStamernaSound.SoundId = "rbxassetid://8258601891"
+			noStamernaSound.Volume = 0.8
+			noStamernaSound.PlayOnRemove = true
+			noStamernaSound:Destroy()
             require(player.PlayerGui.MainUI.Initiator.Main_Game).caption("You're exhausted", true)
+            
         end
     else
         if currentStamina < maxStamina then
