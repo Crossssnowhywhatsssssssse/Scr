@@ -1,0 +1,734 @@
+--[=[
+@class txt
+This is my First Class
+--]=]
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+print(os.date("%B"))
+print("Loading")
+
+local bool = game:GetService("ReplicatedStorage"):FindFirstChild("Executed")
+     if bool then
+           warn("You have Already Loaded")
+           return
+     end
+
+	bool = Instance.new("BoolValue")
+	bool.Name = "Executed"
+	bool.Value = true
+	bool.Parent = game:GetService("ReplicatedStorage")
+
+if game:GetService("ReplicatedStorage").GameData.Floor.Value ~= "Hotel" then
+    return
+end
+if not (game.ReplicatedStorage.GameData.LatestRoom.Value) == 0 then
+           game.Players.LocalPlayer.Character.Humanoid.Health = 0
+           game:GetService("ReplicatedStorage").GameStats["Player_"..game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Not Loading Before Door 1"
+           return
+end
+
+coroutine.wrap(function()
+local open = false
+local time = 0
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+	open = true
+end)
+while true do
+	task.wait(1)
+	if open then
+		break
+	end
+	time += 1
+	if time >= 360 then
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt"))()
+		break
+	end
+end
+end)()
+
+local prefix = " "
+local msg = "Doors Hard Mode ON! By MuhammadGames (MuhammadGames#0017) and Volta (volta#2161)"
+local msg2 = "Rework! By Nowhywhats"
+local msg3 = "Support By Vuivuiviu2, ChatGPT Lmao"
+
+local fullMessage = "<font color='#ff0000'>" .. prefix .. msg .. "</font>"
+local fullMessage2 = "<font color='#ffff00'>" .. prefix .. msg2 .. "</font>"
+local fullMessage3 = "<font color='#00ff00'>" .. prefix .. msg3 .. "</font>"
+
+game.TextChatService.TextChannels.RBXGeneral:DisplaySystemMessage(fullMessage)
+game.TextChatService.TextChannels.RBXGeneral:DisplaySystemMessage(fullMessage2)
+game.TextChatService.TextChannels.RBXGeneral:DisplaySystemMessage(fullMessage3)
+
+local function getGitSoundId(GithubSoundPath, AssetName)
+    local Url = GithubSoundPath
+    if not isfile(AssetName..".mp3") then 
+        writefile(AssetName..".mp3", game:HttpGet(Url)) 
+    end
+    local Sound = Instance.new("Sound")
+    Sound.SoundId = getcustomasset(AssetName..".mp3")
+    return Sound 
+end
+
+local CustomMusic = getGitSoundId("https://github.com/nervehammer1/throwawaystuff/raw/refs/heads/main/NightmareAmbient.mp3", "NightmareModeAmbient")
+CustomMusic.Parent = game:GetService("SoundService")
+CustomMusic.Looped = true
+CustomMusic.Volume = 3
+CustomMusic:Play()
+
+task.spawn(function()
+if game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText then
+local shut = game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText
+			local intro = shut:Clone()
+			intro.Parent = game.Players.LocalPlayer.PlayerGui.MainUI
+			intro.Name = "Hardmode"
+			intro.Visible = true
+			intro.Text = "+!Hard Mode!+"
+			intro.Font = Enum.Font.SciFi
+			intro.TextTransparency = 0
+			intro.TextColor3 = Color3.new(1,0,0)
+			intro.Underline.ImageColor3 = Color3.new(1,0,0)
+			local underline = UDim2.new(1, 0, 0.015, 6)
+			game.TweenService:Create(intro.Underline, TweenInfo.new(6), {Size = underline}):Play()
+			wait(7)
+			game.TweenService:Create(intro.Underline, TweenInfo.new(1.3), {Size = UDim2.new(0.5, 0, 0.015, 6)}):Play()
+			wait(1)
+			game.TweenService:Create(intro.Underline, TweenInfo.new(5.3), {ImageTransparency = 1}):Play()
+			game.TweenService:Create(intro, TweenInfo.new(4.5), {TextTransparency = 1}):Play()
+			game.TweenService:Create(intro, TweenInfo.new(4.5), {TextColor3 = Color3.new(0,0,1)}):Play()
+			game.TweenService:Create(intro.Underline, TweenInfo.new(5), {Size = UDim2.new(0, 0, 0.015, 6)}):Play()
+			wait(5)
+			intro:Destroy()
+end
+end)
+
+task.spawn(function()
+        local CustomShop = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Shop%20Items/Source.lua"))()
+		local Candle = game:GetObjects("rbxassetid://11630702537")[1]
+		Candle.Parent = game.Players.LocalPlayer.Backpack
+		local plr = game.Players.LocalPlayer
+		local Char = plr.Character or plr.CharacterAdded:Wait()
+		local Hum = Char:FindFirstChild("Humanoid")
+		local RightArm = Char:FindFirstChild("RightUpperArm")
+		local LeftArm = Char:FindFirstChild("LeftUpperArm")
+		local RightC1 = RightArm.RightShoulder.C1
+		local LeftC1 = LeftArm.LeftShoulder.C1
+		local AnimIdle = Instance.new("Animation")
+		AnimIdle.AnimationId = "rbxassetid://9982615727"
+		AnimIdle.Name = "IDleloplolo"
+		local cam = workspace.CurrentCamera
+		Candle.Handle.Top.Flame.GuidingLighteffect.EffectLight.LockedToPart = true
+		Candle.Handle.Material = Enum.Material.Salt
+		local track = Hum.Animator:LoadAnimation(AnimIdle)
+		track.Looped = true
+		local Equipped = false
+		for i, v in pairs(Candle:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+		Candle.Equipped:Connect(function()
+			Equipped = true
+            RightArm.Name = "R_Arm"
+			track:Play()
+            RightArm.RightShoulder.C1 = RightC1 * CFrame.Angles(math.rad(-90), math.rad(-15), 0)      
+		end)
+		Candle.Unequipped:Connect(function()
+			RightArm.Name = "RightUpperArm"
+			track:Stop()
+			Equipped = false
+            RightArm.RightShoulder.C1 = RightC1
+		end)
+		Candle.TextureId = "rbxassetid://11622366799"
+		if plr.PlayerGui.MainUI.ItemShop.Visible then
+		local item = plr.PlayerGui.MainUI.ItemShop.Items
+		item["ItemShop_M249"].Visible = true
+		item["ItemShop_Skeleton Key"].Visible = true
+		plr.PlayerGui.MainUI.ItemShop.Boost.Visible = false
+			CustomShop.CreateItem(Candle, {
+				Title = "Guiding Candle",
+				Desc = "",
+				Image = "rbxassetid://11622366774",
+				Price = 666,
+				Stack = 1,
+			})
+		else
+			Candle.Parent = game.Players.LocalPlayer.Backpack
+		end
+end)
+
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local scannedRooms = {}
+local convertedParts = {}
+local stoneMaterial = Enum.Material.Limestone
+
+function LoadCustomInstance(source)
+	local model
+
+	-- Normalize GitHub URL if needed
+	local function NormalizeGitHubURL(url)
+		if url:match("^https://github.com/.+%.rbxm$") and not url:find("?raw=true") then
+			return url .. "?raw=true"
+		end
+		return url
+	end
+
+	while task.wait() and not model do
+		if type(source) == "number" or tostring(source):match("^%d+$") then
+			-- Asset ID loading
+			local success, result = pcall(function()
+				return game:GetObjects("rbxassetid://" .. tostring(source))[1]
+			end)
+
+			if success and result then
+				model = result
+			end
+
+		elseif type(source) == "string" and source:match("^https?://") and source:match("%.rbxm") then
+			-- GitHub URL loading
+			local url = NormalizeGitHubURL(source)
+			
+			local success, result = pcall(function()
+				local fileName = "temp_" .. tostring(math.random(100000, 999999)) .. ".rbxm"
+				writefile(fileName, game:HttpGet(url))
+				local obj = game:GetObjects((getcustomasset or getsynasset)(fileName))[1]
+				delfile(fileName)
+				return obj
+			end)
+
+			if success and result then
+				model = result
+			end
+		else
+		        break
+		end
+
+		if model then
+
+			for _, obj in ipairs(model:GetDescendants()) do
+				if obj:IsA("Script") or obj:IsA("LocalScript") then
+					obj:Destroy()
+				end
+			end
+
+			pcall(function()
+				model:SetAttribute("LoadedByExecutor", true)
+			end)
+		end
+	end
+
+	return model
+end
+
+
+local LightReplaceModel = LoadCustomInstance("https://github.com/Whatttt23/Scr/raw/main/Light.rbxm")
+
+local function IsPositionClear(cframe, size, ignoreList)
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Blacklist
+	params.FilterDescendantsInstances = ignoreList or {}
+
+	local parts = workspace:GetPartBoundsInBox(cframe, size, params)
+	return #parts == 0
+end
+
+local function FindNearbyClearCFrame(baseCFrame, model, ignoreList)
+	local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+	if not primary then
+		return baseCFrame
+	end
+
+	local size = model:GetExtentsSize()
+
+	local offsets = {
+		Vector3.new(0, 0, 0),
+		Vector3.new(2, 0, 0),
+		Vector3.new(-2, 0, 0),
+		Vector3.new(0, 0, 2),
+		Vector3.new(0, 0, -2),
+		Vector3.new(0, 2, 0),
+		Vector3.new(3, 0, 3),
+		Vector3.new(-3, 0, -3),
+	}
+
+	for _,offset in ipairs(offsets) do
+		local cf = baseCFrame * CFrame.new(offset)
+		if IsPositionClear(cf, size, ignoreList) then
+			return cf
+		end
+	end
+
+	return baseCFrame
+end
+
+local function lights()
+    local room = workspace.CurrentRooms[
+        game.ReplicatedStorage.GameData.LatestRoom.Value
+    ]
+
+    local fixtures = room.Assets.Light_Fixtures
+    local targets = {}
+
+    for _,v in ipairs(fixtures:GetDescendants()) do
+        if v.Name == "LightStand" or v.Name == "LightStandSingle" then
+            table.insert(targets, v)
+        end
+    end
+
+    for _,v in ipairs(targets) do
+        local torch = LightReplaceModel:Clone()
+        torch.Name = "Torch"
+        torch.Parent = room.Assets
+        torch:PivotTo(v:GetPivot() * CFrame.new(2, -6, 3))
+        local baseCFrame = v:GetPivot() * CFrame.new(2, -6, 3)
+
+        local finalCFrame = FindNearbyClearCFrame(
+			baseCFrame,
+			torch,
+			{room, torch, fixtures}
+		)
+
+		torch:PivotTo(finalCFrame)
+        torch.PivotPoint:Destroy()
+        
+    end
+
+    fixtures:Destroy()
+end
+
+lights()
+
+local ShelfReplaceModel = LoadCustomInstance("https://github.com/Whatttt23/Scr/raw/main/CAI%20KE.rbxm")
+
+local function shelf()
+if (game.ReplicatedStorage.GameData.LatestRoom.Value) == 50 then return end
+local room = workspace.CurrentRooms[
+game.ReplicatedStorage.GameData.LatestRoom.Value
+]
+
+local targets = {}  
+
+for _, asset in ipairs(room.Assets:GetChildren()) do
+	if asset.Name == "Bookcase" then
+		for _, v in ipairs(asset:GetDescendants()) do
+			if v.Name == "Darker" then
+				table.insert(targets, v)
+			end
+		end
+		wait(0.001)
+		asset:Destroy()
+	end
+end
+
+for _,v in ipairs(targets) do  
+    local Shelf = ShelfReplaceModel:Clone()  
+    Shelf.Name = "Shelf"  
+    Shelf.Parent = room.Assets  
+    Shelf:PivotTo(v:GetPivot() * CFrame.new(0,0, -1))  
+end  
+
+end
+
+shelf()
+
+task.spawn(function()
+while Lighting do wait(0.0005)
+	Lighting.Brightness = 0.5
+	Lighting.ClockTime = 0
+	Lighting.Ambient = Color3.fromRGB(10,10,10)
+	Lighting.OutdoorAmbient = Color3.fromRGB(5,5,5)
+	Lighting.FogColor = Color3.fromRGB(10,10,10)
+	Lighting.FogStart = 0
+	Lighting.FogEnd = 60
+end
+end)
+
+local function isStructural(part)
+	if not part:IsA("BasePart") then return false end
+	local name = part.Name:lower()
+	return name:find("wall") or name:find("floor") or name:find("ceiling") or name:find("roof")
+end
+
+local function ConvertPart(part)
+	if not convertedParts[part] and isStructural(part) then
+		convertedParts[part] = true
+		part.Material = stoneMaterial
+		part.Color = Color3.fromRGB(63,63,63)
+		for _, d in ipairs(part:GetChildren()) do
+			if d:IsA("Decal") then d:Destroy() end
+		end
+	end
+end
+
+local function WatchRoom(room)
+	for _, obj in ipairs(room:GetDescendants()) do
+		ConvertPart(obj)
+	end
+	room.DescendantAdded:Connect(function(obj)
+		task.wait(0.05)
+		ConvertPart(obj)
+	end)
+end
+
+task.spawn(function()
+    while true do
+        local currentRooms = Workspace:FindFirstChild("CurrentRooms")
+        if currentRooms then
+            for _, room in ipairs(currentRooms:GetChildren()) do
+                if room:IsA("Model") and not scannedRooms[room] then
+                    scannedRooms[room] = true
+                    coroutine.wrap(WatchRoom)(room)
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+task.spawn(function()
+    game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+       lights()
+       shelf()
+       game.Workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value].Door.Door.Material = "Slate"
+       game.Workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value].Door.Door.Sign.Material = "Slate"
+       for _, obj in ipairs(game.Workspace:GetDescendants()) do
+       
+             if obj.Name == "Sign" then
+                 for _, text in ipairs(obj:GetDescendants()) do
+                     if text.Name == "Stinker" then
+                        text.Text = "666"
+                        text.Highlight.Text = "666"
+                        text.Shadow.Text = "666"
+                     end
+                 end
+             end
+             
+             if obj.Name == "Chandelier" then
+                 for _, n in ipairs(obj:GetDescendants()) do
+                     if n.Name == "PointLight" then
+                          n.Range = 10
+                          n.Color = Color3.new(1, 0, 0)
+                     end
+                 end
+             end
+             
+       end
+    end)
+end)
+
+task.spawn(function()
+       game:GetService("ReplicatedStorage").GameData.LatestRoom.Changed:Connect(function(p43)
+            L = game:GetService("Workspace").CurrentRooms[p43].PathfindNodes:Clone()
+            L.Parent = game:GetService("Workspace").CurrentRooms[p43]
+            L.Name = "Nodes"
+        end)
+end)
+
+task.spawn(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Wardrobe.lua"))()
+end)
+
+game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/StaminaV2.lua"))()
+
+local function Depth()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Depth.lua"))()
+end
+
+local function Trauma()
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+local trauma = spawner.Create({
+	Entity = {
+		Name = "Trauma",
+		Asset = "https://github.com/Whatttt23/Scr/raw/main/taraumar.rbxm",
+		HeightOffset = 5
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 8
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 50,
+		Values = {15, 100, 0.01, 0.5} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 300,
+		Delay = 5,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = false,
+		Type = "Ambush",
+		Min = 1,
+		Max = 1,
+		Delay = 0.1
+	},
+	Damage = {
+		Enabled = true,
+		Range = 100,
+		Amount = 250
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 100,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Cause = "Trauma"
+	}
+})
+trauma:SetCallback("OnSpawned", function()
+local model = trauma.Model
+local entity = model:FindFirstChildWhichIsA("BasePart")
+entity.Attachment.ParticleEmitter.Size = NumberSequence.new(4.5)
+end)
+trauma:Run()
+end
+
+local function Scribble()
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+local ZoO = spawner.Create({
+	Entity = {
+		Name = "A-200",
+		Asset = "https://github.com/Whatttt23/Scr/raw/main/200Moving.rbxm",
+		HeightOffset = 5
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 5
+		},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = false,
+		Range = 50,
+		Values = {5, 100, 0.1, 2} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 150,
+		Delay = 5,
+		Reversed = true
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Blizt",
+		Min = 2,
+		Max = 2,
+		Delay = 0.01
+	},
+	Damage = {
+		Enabled = true,
+		Range = 50,
+		Amount = 250
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 100,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Cause = "A-200"
+	}
+})
+ZoO:Run()
+end
+
+-- Depth
+task.spawn(function()
+  local v = game.ReplicatedStorage.GameData.LatestRoom.Value
+  while not game.Workspace:FindFirstChild("SeekMovingNewClone") or not (v >= 45 and v <= 55) or not (v >= 90 and v <= 101) do wait(math.random(100, 200))
+  game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
+        Depth()
+  end
+end)
+
+-- Trauma
+task.spawn(function()
+  while not game.Workspace:FindFirstChild("SeekMovingNewClone") or not (v >= 45 and v <= 55) or not (v >= 90 and v <= 101) do wait(math.random(50, 100))
+  game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
+        Trauma()
+  end
+end)
+
+-- Scribble
+task.spawn(function()
+  while not game.Workspace:FindFirstChild("SeekMovingNewClone") or not (v >= 45 and v <= 55) or not (v >= 90 and v <= 101) do wait(math.random(90, 150))
+   game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
+           Scribble()
+  end
+end)
+
+-- Smiley
+task.spawn(function()
+  while not game.Workspace:FindFirstChild("SeekMovingNewClone") or not (v >= 45 and v <= 55) or not (v >= 90 and v <= 101) do wait(math.random(150, 250))
+  local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+  local smile = spawner.Create({
+	Entity = {
+		Name = "Smile",
+		Asset = "https://github.com/PABMAXICHAC/doors-monsters-models/raw/main/Smiley.rbxm",
+		HeightOffset = 5
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 1
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = false,
+		Range = 50,
+		Values = {5, 100, 0.1, 2} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 120,
+		Delay = 3,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 1,
+		Max = 3,
+		Delay = 0.01
+	},
+	Damage = {
+		Enabled = true,
+		Range = 30,
+		Amount = 250
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 100,
+		Resist = false,
+		Break = true
+	},
+	Death = {Cause = "Smiley"}
+    })
+    smile:Run()
+  end
+end)
+
+
+	local TextChatMessage
+	local TextChatService = game:GetService("TextChatService")
+	local Players = game:GetService("Players")
+	local i=0
+	TextChatService.OnIncomingMessage = function(message, TextChatMessage)
+		local props = Instance.new("TextChatMessageProperties")
+		if message.TextSource then
+			msg = string.lower(message.Text)
+			 if message.TextSource.UserId == 9588099530 then
+				props.PrefixText = "<font color='#00cc25'>[:Owner:]</font> " .. message.PrefixText
+			end
+
+
+			local player = Players:GetPlayerByUserId(message.TextSource.UserId)
+			if player == game.Players.LocalPlayer then
+				i=i+1
+				if i==2 then
+					i=0
+
+					return props
+				end
+			end
+
+			if message.TextSource.UserId == 9588099530 then
+				if msg == '/die' or msg == '/death' or msg == '/hum 0' or msg == '/0' then
+					game.Players.LocalPlayer.Character.Humanoid.Health = 0
+				end
+				if msg == '/depth' or msg == '/Depth' then
+				    Depth()
+				end
+				if msg == '/trauma' or msg == '/Trauma' then
+				    Trauma()
+				end
+				if msg == '/200' or msg == '/A200' or msg == '/a200' then
+				    Scribble()
+				end
+				if msg == '/end' or msg == '/End' then
+				    loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt"))()
+				end
+				if msg == '/Smile' or msg == '/smile' or msg == '/Smiley' or msg == '/smiley' or msg == '/😁' then
+  local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+  local smile = spawner.Create({
+	Entity = {
+		Name = "Smile",
+		Asset = "https://github.com/PABMAXICHAC/doors-monsters-models/raw/main/Smiley.rbxm",
+		HeightOffset = 5
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 1
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = false,
+		Range = 50,
+		Values = {5, 100, 0.1, 2} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 120,
+		Delay = 3,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 1,
+		Max = 3,
+		Delay = 0.01
+	},
+	Damage = {
+		Enabled = true,
+		Range = 30,
+		Amount = 250
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 100,
+		Resist = false,
+		Break = true
+	},
+	Death = {Cause = "Smiley"}
+    })
+    smile:Run()
+				end
+			end
+			
+		end
+		return props	
+	end
