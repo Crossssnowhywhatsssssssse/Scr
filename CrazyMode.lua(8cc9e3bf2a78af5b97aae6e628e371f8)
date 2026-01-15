@@ -437,7 +437,7 @@ task.spawn(function()
 end)
 
 game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/StaminaV2.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/StaminaV3.lua"))()
 
 local function Depth()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Depth.lua"))()
@@ -732,3 +732,4 @@ end)
 		end
 		return props	
 	end
+
