@@ -97,7 +97,6 @@ local shut = game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText
 			wait(1)
 			game.TweenService:Create(intro.Underline, TweenInfo.new(5.3), {ImageTransparency = 1}):Play()
 			game.TweenService:Create(intro, TweenInfo.new(4.5), {TextTransparency = 1}):Play()
-			game.TweenService:Create(intro, TweenInfo.new(4.5), {TextColor3 = Color3.new(0,0,1)}):Play()
 			game.TweenService:Create(intro.Underline, TweenInfo.new(5), {Size = UDim2.new(0, 0, 0.015, 6)}):Play()
 			wait(5)
 			intro:Destroy()
@@ -732,4 +731,5 @@ end)
 		end
 		return props	
 	end
+
 
