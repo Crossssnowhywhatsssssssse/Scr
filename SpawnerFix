@@ -18,7 +18,7 @@
 
 ]]--
 
-if VynixuEntitySpawnerV2 then return VynixuEntitySpawnerV2 end
+if VynixuEntitySpawnerV3 then return VynixuEntitySpawnerV2 end
 
 -- Services
 
@@ -285,119 +285,72 @@ function GetCurrentRoom(latest)
 end
 
 function GetNodesFromRoom(room, reversed)
-
-	local nodes = {}
+	local entrance, exitNode
+	local middleNodes = {}
 
 	local roomEntrance = room:FindFirstChild("RoomEntrance")
-
 	if roomEntrance then
-
 		local n = roomEntrance:Clone()
-
-		n.Name = "0"
-
 		n.CFrame -= Vector3.new(0, 3, 0)
-
-		nodes[#nodes + 1] = n
-
+		entrance = n
 	end
 
-	local center = room:FindFirstChild(room.Name)
-
-	if center then
-
-		local n = center:Clone()
-
-		n.Name = "1"
-
-		n.CFrame += Vector3.new(0, 1, 0)
-
-		nodes[#nodes + 1] = n
-
-	end
-
-for _, asset in ipairs(room:GetDescendants()) do
-
-	    if asset.Name == "DoorNormal" then
-
-	       for _, c in ipairs(asset:GetDescendants()) do
-
-	             if c.Name == "Door" then
-
-         		local n = c:Clone()
-
-	         	n.Name = "1"
-
-	         	n.CFrame -= Vector3.new(0, 3, 0)
-
-	         	nodes[#nodes + 1] = n
-
-	             end
-
-	       end
-
-	    end
-
-	end
-
-    for _, asset in ipairs(room:GetDescendants()) do
-
-	    if asset.Name == "BlockedDoor" then
-
-   		local n = asset:Clone()
-
-	   	n.Name = "1"
-
-	   	n.CFrame -= Vector3.new(0, 3, 0)
-
-	   	nodes[#nodes + 1] = n
-
-	    end
-
+	for _, asset in ipairs(room:GetDescendants()) do
+		if asset.Name == "Door" or asset.Name == "BlockedDoor" then
+			local n = asset:Clone()
+			n.CFrame += Vector3.new(0, 1, 0)
+			table.insert(middleNodes, n)
+		end
 	end
 
 	local nodesFolder = room:FindFirstChild("PathfindNodes")
-
 	if nodesFolder then
-
 		for _, n in ipairs(nodesFolder:GetChildren()) do
-
-			nodes[#nodes + 1] = n
-
+			table.insert(middleNodes, n:Clone())
 		end
-
 	end
 
 	local roomExit = room:FindFirstChild("RoomExit")
-
 	if roomExit then
-
 		local n = roomExit:Clone()
-
-		n.Name = tostring(#nodes + 1)
-
 		n.CFrame -= Vector3.new(0, 3, 0)
-
-		nodes[#nodes + 1] = n
-
+		exitNode = n
 	end
 
-	table.sort(nodes, function(a, b)
+	local referencePos
+	if entrance then
+		referencePos = entrance.Position
+	else
+		referencePos = room:GetPivot().Position
+	end
 
+	table.sort(middleNodes, function(a, b)
+		local da = (a.Position - referencePos).Magnitude
+		local db = (b.Position - referencePos).Magnitude
 		if reversed then
-
-			return tonumber(a.Name) > tonumber(b.Name)
-
+			return da > db
 		else
-
-			return tonumber(a.Name) < tonumber(b.Name)
-
+			return da < db
 		end
-
 	end)
 
-	return nodes
+	local nodes = {}
 
+	if not reversed then
+		if entrance then table.insert(nodes, entrance) end
+		for _, n in ipairs(middleNodes) do
+			table.insert(nodes, n)
+		end
+		if exitNode then table.insert(nodes, exitNode) end
+	else
+		if exitNode then table.insert(nodes, exitNode) end
+		for i = #middleNodes, 1, -1 do
+			table.insert(nodes, middleNodes[i])
+		end
+		if entrance then table.insert(nodes, entrance) end
+	end
+
+	return nodes
 end
 
 function GetPathfindNodesAmbush(config)
