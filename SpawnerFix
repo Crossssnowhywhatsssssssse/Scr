@@ -18,7 +18,7 @@
 
 ]]--
 
-if VynixuEntitySpawnerV3 then return VynixuEntitySpawnerV2 end
+if VynixuEntitySpawnerV2 then return VynixuEntitySpawnerV2 end
 
 -- Services
 
@@ -285,60 +285,119 @@ function GetCurrentRoom(latest)
 end
 
 function GetNodesFromRoom(room, reversed)
-    local entrance = room:FindFirstChild("RoomEntrance")
-    local exitNode = room:FindFirstChild("RoomExit")
-    local middleNodes = {}
 
-    -- 1. Thu thập tất cả các điểm trung gian (Cửa và PathfindNodes)
-    -- Thay vì Clone, chúng ta lấy trực tiếp Instance để tiết kiệm hiệu năng
+	local nodes = {}
+
+	local roomEntrance = room:FindFirstChild("RoomEntrance")
+
+	if roomEntrance then
+
+		local n = roomEntrance:Clone()
+
+		n.Name = "0"
+
+		n.CFrame -= Vector3.new(0, 3, 0)
+
+		nodes[#nodes + 1] = n
+
+	end
+
+	local center = room:FindFirstChild(room.Name)
+
+	if center then
+
+		local n = center:Clone()
+
+		n.Name = "1"
+
+		n.CFrame += Vector3.new(0, 1, 0)
+
+		nodes[#nodes + 1] = n
+
+	end
+
+for _, asset in ipairs(room:GetDescendants()) do
+
+	    if asset.Name == "DoorNormal" then
+
+	       for _, c in ipairs(asset:GetDescendants()) do
+
+	             if c.Name == "Door" then
+
+         		local n = c:Clone()
+
+	         	n.Name = "1"
+
+	         	n.CFrame -= Vector3.new(0, 3, 0)
+
+	         	nodes[#nodes + 1] = n
+
+	             end
+
+	       end
+
+	    end
+
+	end
+
     for _, asset in ipairs(room:GetDescendants()) do
-        if asset.Name == "Door" or asset.Name == "BlockedDoor" then
-            table.insert(middleNodes, asset)
-        end
-    end
 
-    local nodesFolder = room:FindFirstChild("PathfindNodes")
-    if nodesFolder then
-        for _, n in ipairs(nodesFolder:GetChildren()) do
-            table.insert(middleNodes, n)
-        end
-    end
+	    if asset.Name == "BlockedDoor" then
 
-    -- 2. Xác định điểm gốc để sắp xếp
-    local referencePos
-    if not reversed then
-        referencePos = entrance and entrance.Position or room:GetPivot().Position
-    else
-        referencePos = exitNode and exitNode.Position or room:GetPivot().Position
-    end
+   		local n = asset:Clone()
 
-    -- 3. Sắp xếp các node theo khoảng cách
-    table.sort(middleNodes, function(a, b)
-        local da = (a.Position - referencePos).Magnitude
-        local db = (b.Position - referencePos).Magnitude
-        return da < db -- Luôn sắp xếp từ gần đến xa so với điểm gốc
-    end)
+	   	n.Name = "1"
 
-    -- 4. Tổng hợp danh sách node theo thứ tự di chuyển
-    local nodes = {}
+	   	n.CFrame -= Vector3.new(0, 3, 0)
 
-    if not reversed then
-        -- Đi xuôi: Lối vào -> Trung gian -> Lối ra
-        if entrance then table.insert(nodes, entrance) end
-        for _, n in ipairs(middleNodes) do
-            table.insert(nodes, n)
-        end
-        if exitNode then table.insert(nodes, exitNode) end
-    else
-        -- Đi ngược: Lối ra -> Trung gian (đã đảo thứ tự) -> Lối vào
-        if exitNode then table.insert(nodes, exitNode) end
-        for i = #middleNodes, 1, -1 do
-            table.insert(nodes, middleNodes[i])
-        end
-        if entrance then table.insert(nodes, entrance) end
-    end
+	   	nodes[#nodes + 1] = n
 
-    return nodes
+	    end
+
+	end
+
+	local nodesFolder = room:FindFirstChild("PathfindNodes")
+
+	if nodesFolder then
+
+		for _, n in ipairs(nodesFolder:GetChildren()) do
+
+			nodes[#nodes + 1] = n
+
+		end
+
+	end
+
+	local roomExit = room:FindFirstChild("RoomExit")
+
+	if roomExit then
+
+		local n = roomExit:Clone()
+
+		n.Name = tostring(#nodes + 1)
+
+		n.CFrame -= Vector3.new(0, 3, 0)
+
+		nodes[#nodes + 1] = n
+
+	end
+
+	table.sort(nodes, function(a, b)
+
+		if reversed then
+
+			return tonumber(a.Name) > tonumber(b.Name)
+
+		else
+
+			return tonumber(a.Name) < tonumber(b.Name)
+
+		end
+
+	end)
+
+	return nodes
+
 end
 
 function GetPathfindNodesAmbush(config)
