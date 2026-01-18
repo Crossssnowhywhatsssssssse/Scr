@@ -285,72 +285,60 @@ function GetCurrentRoom(latest)
 end
 
 function GetNodesFromRoom(room, reversed)
-	local entrance, exitNode
-	local middleNodes = {}
+    local entrance = room:FindFirstChild("RoomEntrance")
+    local exitNode = room:FindFirstChild("RoomExit")
+    local middleNodes = {}
 
-	local roomEntrance = room:FindFirstChild("RoomEntrance")
-	if roomEntrance then
-		local n = roomEntrance:Clone()
-		n.CFrame -= Vector3.new(0, 3, 0)
-		entrance = n
-	end
+    -- 1. Thu thập tất cả các điểm trung gian (Cửa và PathfindNodes)
+    -- Thay vì Clone, chúng ta lấy trực tiếp Instance để tiết kiệm hiệu năng
+    for _, asset in ipairs(room:GetDescendants()) do
+        if asset.Name == "Door" or asset.Name == "BlockedDoor" then
+            table.insert(middleNodes, asset)
+        end
+    end
 
-	for _, asset in ipairs(room:GetDescendants()) do
-		if asset.Name == "Door" or asset.Name == "BlockedDoor" then
-			local n = asset:Clone()
-			n.CFrame += Vector3.new(0, 1, 0)
-			table.insert(middleNodes, n)
-		end
-	end
+    local nodesFolder = room:FindFirstChild("PathfindNodes")
+    if nodesFolder then
+        for _, n in ipairs(nodesFolder:GetChildren()) do
+            table.insert(middleNodes, n)
+        end
+    end
 
-	local nodesFolder = room:FindFirstChild("PathfindNodes")
-	if nodesFolder then
-		for _, n in ipairs(nodesFolder:GetChildren()) do
-			table.insert(middleNodes, n:Clone())
-		end
-	end
+    -- 2. Xác định điểm gốc để sắp xếp
+    local referencePos
+    if not reversed then
+        referencePos = entrance and entrance.Position or room:GetPivot().Position
+    else
+        referencePos = exitNode and exitNode.Position or room:GetPivot().Position
+    end
 
-	local roomExit = room:FindFirstChild("RoomExit")
-	if roomExit then
-		local n = roomExit:Clone()
-		n.CFrame -= Vector3.new(0, 3, 0)
-		exitNode = n
-	end
+    -- 3. Sắp xếp các node theo khoảng cách
+    table.sort(middleNodes, function(a, b)
+        local da = (a.Position - referencePos).Magnitude
+        local db = (b.Position - referencePos).Magnitude
+        return da < db -- Luôn sắp xếp từ gần đến xa so với điểm gốc
+    end)
 
-	local referencePos
-	if entrance then
-		referencePos = entrance.Position
-	else
-		referencePos = room:GetPivot().Position
-	end
+    -- 4. Tổng hợp danh sách node theo thứ tự di chuyển
+    local nodes = {}
 
-	table.sort(middleNodes, function(a, b)
-		local da = (a.Position - referencePos).Magnitude
-		local db = (b.Position - referencePos).Magnitude
-		if reversed then
-			return da > db
-		else
-			return da < db
-		end
-	end)
+    if not reversed then
+        -- Đi xuôi: Lối vào -> Trung gian -> Lối ra
+        if entrance then table.insert(nodes, entrance) end
+        for _, n in ipairs(middleNodes) do
+            table.insert(nodes, n)
+        end
+        if exitNode then table.insert(nodes, exitNode) end
+    else
+        -- Đi ngược: Lối ra -> Trung gian (đã đảo thứ tự) -> Lối vào
+        if exitNode then table.insert(nodes, exitNode) end
+        for i = #middleNodes, 1, -1 do
+            table.insert(nodes, middleNodes[i])
+        end
+        if entrance then table.insert(nodes, entrance) end
+    end
 
-	local nodes = {}
-
-	if not reversed then
-		if entrance then table.insert(nodes, entrance) end
-		for _, n in ipairs(middleNodes) do
-			table.insert(nodes, n)
-		end
-		if exitNode then table.insert(nodes, exitNode) end
-	else
-		if exitNode then table.insert(nodes, exitNode) end
-		for i = #middleNodes, 1, -1 do
-			table.insert(nodes, middleNodes[i])
-		end
-		if entrance then table.insert(nodes, entrance) end
-	end
-
-	return nodes
+    return nodes
 end
 
 function GetPathfindNodesAmbush(config)
