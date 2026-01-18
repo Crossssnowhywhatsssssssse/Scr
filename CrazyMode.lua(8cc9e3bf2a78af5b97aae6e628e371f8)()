@@ -24,6 +24,10 @@ local bool = game:GetService("ReplicatedStorage"):FindFirstChild("Executed")
 if game:GetService("ReplicatedStorage").GameData.Floor.Value ~= "Hotel" then
     return
 end
+
+local sussyroom = game:GetObjects("rbxassetid://11626479968")[1]
+sussyroom.Parent = workspace
+
 if not (game.ReplicatedStorage.GameData.LatestRoom.Value) == 0 then
            game.Players.LocalPlayer.Character.Humanoid.Health = 0
            game:GetService("ReplicatedStorage").GameStats["Player_"..game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Not Loading Before Door 1"
@@ -43,7 +47,7 @@ while true do
 	end
 	time += 1
 	if time >= 360 then
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt", false))()
 		break
 	end
 end
@@ -72,15 +76,28 @@ local function getGitSoundId(GithubSoundPath, AssetName)
     return Sound 
 end
 
+-- Music
 local CustomMusic = getGitSoundId("https://github.com/nervehammer1/throwawaystuff/raw/refs/heads/main/NightmareAmbient.mp3", "NightmareModeAmbient")
 CustomMusic.Parent = game:GetService("SoundService")
 CustomMusic.Looped = true
 CustomMusic.Volume = 3
 CustomMusic:Play()
 
+-- Intro
 task.spawn(function()
-if game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText then
-local shut = game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText
+local player = game.Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+
+local mainUI = gui:FindFirstChild("MainUI")
+if not mainUI then return end
+
+local mainFrame = mainUI:FindFirstChild("MainFrame")
+if not mainFrame then return end
+
+local introText = mainFrame:FindFirstChild("IntroText")
+if not introText then return end
+
+local shut = introText
 			local intro = shut:Clone()
 			intro.Parent = game.Players.LocalPlayer.PlayerGui.MainUI
 			intro.Name = "Hardmode"
@@ -100,11 +117,11 @@ local shut = game.Players.LocalPlayer.PlayerGui.MainUI.MainFrame.IntroText
 			game.TweenService:Create(intro.Underline, TweenInfo.new(5), {Size = UDim2.new(0, 0, 0.015, 6)}):Play()
 			wait(5)
 			intro:Destroy()
-end
 end)
 
+-- Item
 task.spawn(function()
-        local CustomShop = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Shop%20Items/Source.lua"))()
+        local CustomShop = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Shop%20Items/Source.lua", false))()
 		local Candle = game:GetObjects("rbxassetid://11630702537")[1]
 		Candle.Parent = game.Players.LocalPlayer.Backpack
 		local plr = game.Players.LocalPlayer
@@ -156,6 +173,43 @@ task.spawn(function()
 		else
 			Candle.Parent = game.Players.LocalPlayer.Backpack
 		end
+end)
+
+-- New Ambient
+task.spawn(function()
+while true do
+		local ambiencefirst = Instance.new("Sound", workspace)
+		ambiencefirst.SoundId = "rbxassetid://12229501"
+		ambiencefirst.Pitch = 0.11
+		ambiencefirst:Play()
+		wait(30)
+		ambiencefirst:Destroy()
+		wait(70)
+	end
+end)
+
+-- If Player die
+task.spawn(function()
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+humanoid.HealthChanged:Connect(function(health)
+	if health <= 0 then
+	character:SetAttribute("Hiding", false)
+	character:SetAttribute("Stunned", true)
+	character:SetAttribute("Alive", false)
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://6767192500"
+		sound.Volume = 5
+		sound.Parent = workspace
+		sound:Play()
+
+		sound.Ended:Connect(function()
+			sound:Destroy()
+		end)
+	end
+end)
 end)
 
 local Workspace = game:GetService("Workspace")
@@ -392,6 +446,7 @@ task.spawn(function()
     end
 end)
 
+-- Sign
 task.spawn(function()
     game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
        lights()
@@ -423,6 +478,7 @@ task.spawn(function()
     end)
 end)
 
+-- Nodes
 task.spawn(function()
        game:GetService("ReplicatedStorage").GameData.LatestRoom.Changed:Connect(function(p43)
             L = game:GetService("Workspace").CurrentRooms[p43].PathfindNodes:Clone()
@@ -431,15 +487,124 @@ task.spawn(function()
         end)
 end)
 
+-- Death
 task.spawn(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Wardrobe.lua"))()
+local player = game.Players.LocalPlayer
+local main = player.PlayerGui:WaitForChild("MainUI")
+local statistics = main:WaitForChild("Statistics")
+
+local function apply()
+	local practice = statistics:WaitForChild("PracticeMode")
+	local text = practice:WaitForChild("Title")
+    local death = statistics:WaitForChild("Title")
+    
+	practice.Visible = true
+	text.Text = "+Hardmode"
+	text.TextColor3 = Color3.fromRGB(255, 0, 0)
+	text.TextSize = 150
+	
+	death.Text = "Game Over"
+	death.Font = Enum.Font.SciFi
+	death.TextColor3 = Color3.fromRGB(255, 0, 0)
+	
+	statistics.Size = UDim2.new(1, 0, 0.7, 0)
+	statistics.Position = UDim2.new(0.5, 0, 0.45, 0)
+	statistics.BackgroundTransparency = 0.9
+	statistics.BackgroundColor3 = Color3.new(1,0,0)
+	
+	for i,v in pairs(statistics:GetChildren()) do
+			if v.Name == "Frame" or v.Name == "Mods" or v.Name == "CloseButton" then
+				v:Destroy()
+			end
+	end
+end
+
+game:GetService("RunService").Heartbeat:Connect(function()
+	if statistics.Visible then
+		apply()
+	end
+end)
+end)
+
+-- Anti Revive
+task.spawn(function()
+     for i,v in pairs(game.Players.LocalPlayer:GetDescendants()) do
+			if v.Name == "AfterDeathHolder" then
+				v:Destroy()
+			end
+     end
+end)
+
+-- Red?
+task.spawn(function()
+game:GetService("RunService").Heartbeat:Connect(function()
+     for i,v in pairs(game.Players.LocalPlayer.PlayerGui.MainUI:GetDescendants()) do
+			if v:IsA("UIStroke") then
+			    v.Color = Color3.new(1,0,0)
+			end
+			if v:IsA("TextLabel") then
+			    v.TextColor3 = Color3.new(1,0,0)
+			end
+     end
+end)
+end)
+
+-- Menu Death
+for i,v in pairs(game.Players.LocalPlayer.PlayerGui.MainUI:GetChildren()) do
+	  if v.Name == "DeathPanel" then
+			for i,n in pairs(v:GetDescendants()) do
+			
+		   	if n.Name == "Leave" then
+			      n:Destroy()
+			   end
+			
+            end
+	  end
+end
+
+-- New Wardrobe
+task.spawn(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Wardrobe.lua", false))()
+end)
+
+-- Webhook
+task.spawn(function()
+        if table.find("Yuzixser", game.Players.LocalPlayer.Name) then return end
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/Webhook.lua", false))()
 end)
 
 game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Changed:Wait()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/StaminaV3.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/StaminaV3.lua", false))()
+
+local function findseek(seek)
+	if seek.Name == "SeekMoving" or seek.Name == "SeekMovingNewClone" then
+		task.wait(0.5)
+		local SeekRig = seek.SeekRig
+		local Figure = seek.Figure
+  	  SeekRig.Head.Eye.Decal.Texture = "rbxassetid://0"
+		for i,v in pairs(SeekRig:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.Transparency = 1
+			end
+			if v.Name == "StringCheese" then
+				v:Destroy()
+			end
+		end
+		Figure.Transparency = 0
+		Figure.Attachment.ParticleEmitter.Enabled = true
+	else
+		return
+	end
+end
+for i, seek in pairs(workspace:GetChildren()) do
+	findseek(seek)
+end
+workspace.ChildAdded:Connect(function(seek)
+	findseek(seek)
+end)
 
 local function Depth()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Depth.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Depth.lua", false))()
 end
 
 local function Trauma()
@@ -673,7 +838,7 @@ end)
 				    Scribble()
 				end
 				if msg == '/end' or msg == '/End' then
-				    loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt"))()
+				    loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/Monoxide.txt", false))()
 				end
 				if msg == '/Smile' or msg == '/smile' or msg == '/Smiley' or msg == '/smiley' or msg == '/😁' then
   local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
@@ -731,5 +896,4 @@ end)
 		end
 		return props	
 	end
-
 
