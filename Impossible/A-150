@@ -1,0 +1,134 @@
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+local speed = 8
+local move
+local entity = spawner.Create({
+	Entity = {
+		Name = "A-150",
+		Asset = "https://github.com/PABMAXICHAC/doors-monsters-models/raw/main/A150.rbxm",
+		HeightOffset = 2
+	},
+	Lights = {
+		Flicker = {
+			Enabled = false,
+			Duration = 1
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 50,
+		Values = {1, 15, 1, 1}
+	},
+	Movement = {
+		Speed = 0.001,
+		Delay = 1,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = false,
+		Type = "Ambush", -- "Blitz"
+		Min = 1,
+		Max = 1,
+		Delay = 2
+	},
+	Damage = {
+		Enabled = false,
+		Range = 40,
+		Amount = 125
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 999,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"Death", "Hints", "Go", "Here"},
+		Cause = ""
+	}
+})
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+local RunService = game:GetService("RunService")
+    local model = entity.Model
+    local part = model:FindFirstChildWhichIsA("BasePart") or model.PrimaryPart
+    if not part then return end
+    
+    local static = part:FindFirstChild("Static")
+    if static then static:Destroy() end
+    
+    local att = part.Attachment
+    local face = att["ParticleEmitter"]
+    face.Lifetime = NumberRange.new(1, 2)
+    face.Rate = 500
+    face.Rotation = NumberRange.new(0, 0)
+    face.RotSpeed = NumberRange.new(-5, 25)
+    face.Size = NumberSequence.new({
+                       NumberSequenceKeypoint.new(0, 5),
+                       NumberSequenceKeypoint.new(0.4, 7),
+                       NumberSequenceKeypoint.new(0.5, 2),
+                       NumberSequenceKeypoint.new(0.7, 6),
+                       NumberSequenceKeypoint.new(1, 8)
+    })
+    
+   task.wait(2)
+   
+move = RunService.Heartbeat:Connect(function(dt)
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local hrp = chr:WaitForChild("HumanoidRootPart")
+local hum = chr and chr:FindFirstChildOfClass("Humanoid")
+    if hrp and hum and hum.Health > 0 and part and part.Parent then
+    if chr:FindFirstChild("Crucifix") or chr:FindFirstChild("CrucifixImpossible") or chr:GetAttribute("Hiding") then 
+       return
+    end
+    
+        local targetPos = hrp.Position
+        local currentPos = part.Position
+        local direction = (targetPos - currentPos)
+        local distance = direction.Magnitude
+        
+        if distance <= 10 then
+                hum.Health = 0
+                pcall(function()
+                    local stats = game:GetService("ReplicatedStorage"):FindFirstChild("GameStats")
+                    if stats then
+                        stats["Player_"..plr.Name].Total.DeathCause.Value = "A-150"
+                    end
+                end)
+                
+                if move then
+                    move:Disconnect()
+                    move = nil
+                    return
+                end
+                
+                pcall(function()
+                       local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
+                       require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
+                end)
+       end
+        
+        if distance > 1 then
+            direction = direction.Unit
+
+            local moveDist = math.min(distance, speed * dt)
+            local newPos = currentPos + direction * moveDist
+
+            part.CFrame = CFrame.new(newPos, targetPos)
+        end
+    end
+end)
+    
+end)
+
+---====== Run entity ======---
+
+entity:Run()
