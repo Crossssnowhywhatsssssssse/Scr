@@ -110,8 +110,10 @@ ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function(roomValue)
 
     for _, item in pairs(roomPath.Assets:GetDescendants()) do
         if item.Name == "Table" and item:FindFirstChild("Main") then
-            spawncruxy(item.Main.Position + Vector3.new(0, 1.8, 0), item)
-            break
-        end
+	    	if math.random(1, 80) == 1 then
+               spawncruxy(item.Main.Position + Vector3.new(0, 1.8, 0), item)
+               break
+            end
+		end
     end
 end)
