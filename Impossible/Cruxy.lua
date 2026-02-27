@@ -15,12 +15,12 @@ local function spawncruxy(pos, parent)
     local vu64 = v63.Handle:Clone()
     v63:Destroy()
     
-    vu64.Name = "Cruxy7"
+    vu64.Name = "Cruxy"
     vu64.Position = pos
     vu64.Anchored = true
     vu64.Parent = parent
 
-    local randomRot = math.random(-90, 90)
+    local randomRot = math.random(-180, 180)
     vu64.CFrame = CFrame.new(pos) * CFrame.Angles(0, math.rad(randomRot), math.rad(-90))
 
     local light1 = Instance.new("PointLight", vu64)
@@ -52,6 +52,7 @@ local function spawncruxy(pos, parent)
 
     local shadow=game:GetObjects("rbxassetid://11631916882")[1]
     shadow.Parent = game.Players.LocalPlayer.Backpack
+    shadow.Name = "CrucifixImpossible"
     local Players = game:GetService("Players")
     local Plr = Players.LocalPlayer
     local Char = Plr.Character or Plr.CharacterAdded:Wait()
@@ -87,16 +88,17 @@ local function spawncruxy(pos, parent)
         RightArm.RightShoulder.C1 = RightC1
         LeftArm.LeftShoulder.C1 = LeftC1
         end)
-
-        MainGame.caption("You grab the crucifix.", true)
-        task.wait(3)
-        MainGame.caption("It has a text on the back: \"Made in China\"", true)
-        task.wait(3)
-        MainGame.caption("It only works with custom entities.", true)
+        
+        task.spawn(function()
+               MainGame.caption("You grab the crucifix.", true)
+                     task.wait(3)
+               MainGame.caption("It has a text on the back: \"Made in China\"", true)
+        end)
+        
         task.wait(5)
         
         shadow.Equipped:Connect(function()
-        MainGame.caption("It only works with custom entities.", true)
+               MainGame.caption("It only works with custom entities.", true)
         end)
     end)
 end
