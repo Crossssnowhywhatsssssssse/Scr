@@ -70,7 +70,7 @@ ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function(roomValue)
                     if p1:FindFirstChild("Canvas") and p1.Canvas:FindFirstChild("SurfaceGui") then
                         p1.Canvas.SurfaceGui:ClearAllChildren()
                     end
-                    loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Bloopies/refs/heads/main/Hahaahentityfunny"))()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/Impossible/SmileEntity"))()
                 elseif clicknumber >= 76 then
                     MainGame.caption("There is no painting.", true)
                 end
