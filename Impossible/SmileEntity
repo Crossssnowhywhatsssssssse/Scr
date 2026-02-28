@@ -1,0 +1,178 @@
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+local entity = spawner.Create({
+	Entity = {
+		Name = "???",
+		Asset = "rbxassetid://131333857143246",
+		HeightOffset = 2
+	},
+	Lights = {
+		Flicker = {
+			Enabled = false,
+			Duration = 1
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {10.5, 30, 0.5, 2}
+	},
+	Movement = {
+		Speed = 150,
+		Delay = 6.5,
+		Reversed = true
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 2,
+		Max = 4,
+		Delay = 0.1
+	},
+	Damage = {
+		Enabled = true,
+		Range = 65,
+		Amount = 125
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 999,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"H̷̡̡̧̻̼̺̖̫̰̥͚̳͎̣͓͕̼̜̆͐ͅ0̷͇̦̬̟̱̣̠̼̻̱̩̲͇̥̪̙͎̩̈́̌́̈́̓̀̿̍͜Ẃ̵̛̛̏͑̔̏̿͊͐̆̋̈͐̐͘͜", "H̷̡̡̧̻̼̺̖̫̰̥͚̳͎̣͓͕̼̜̆͐ͅ0̷͇̦̬̟̱̣̠̼̻̱̩̲͇̥̪̙͎̩̈́̌́̈́̓̀̿̍͜Ẃ̵̛̛̏͑̔̏̿͊͐̆̋̈͐̐͘͜", "H̷̡̡̧̻̼̺̖̫̰̥͚̳͎̣͓͕̼̜̆͐ͅ0̷͇̦̬̟̱̣̠̼̻̱̩̲͇̥̪̙͎̩̈́̌́̈́̓̀̿̍͜Ẃ̵̛̛̏͑̔̏̿͊͐̆̋̈͐̐͘͜", "H̷̡̡̧̻̼̺̖̫̰̥͚̳͎̣͓͕̼̜̆͐ͅ0̷͇̦̬̟̱̣̠̼̻̱̩̲͇̥̪̙͎̩̈́̌́̈́̓̀̿̍͜Ẃ̵̛̛̏͑̔̏̿͊͐̆̋̈͐̐͘͜"},
+		Cause = "???"
+	}
+})
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+    local part = entity.Model:FindFirstChildWhichIsA("BasePart")
+    local Footsteps = part["Footsteps"]
+    local PlaySound = part["PlaySound"]
+    
+    Footsteps.PlaybackSpeed = 0.1
+    Footsteps.Volume = 0.1
+    
+    PlaySound.PlaybackSpeed = 0.05
+    PlaySound.Volume = 0.1
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		local RunService = game:GetService("RunService")
+		local TweenService = game:GetService("TweenService")
+		local Players = game:GetService("Players")
+		local player = Players.LocalPlayer
+
+		local TOGGLES = 0.2
+		local WAIT_BETWEEN = 0.5
+		local FINAL_TWEEN_DURATION = 35
+		local FINAL_SIZE = UDim2.new(0, 50000, 0, 50000)
+
+		local sound = Instance.new("Sound", workspace)
+		sound.SoundId = "rbxassetid://5263560896"
+		sound.TimePosition = 0
+		local level = Instance.new("DistortionSoundEffect", sound)
+		level.Level = 0.4
+
+		local screen = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+		local background = Instance.new("Frame", screen)
+		background.AnchorPoint = Vector2.new(0.5, 0.5)
+		background.Size = UDim2.new(10, 0, 10, 0)
+		background.Position = UDim2.new(0.5, 0, 0.5, 0)
+		background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+
+		local image = Instance.new("ImageLabel", screen)
+		image.AnchorPoint = Vector2.new(0.5, 0.5)
+		image.Position = UDim2.new(0.5, 0, 0.5, 0)
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.new(0, 5, 0, 5) -- BẮT ĐẦU ở 0,100,0,100
+		image.LayoutOrder = 0
+		image.BorderSizePixel = 0
+		image.Image = "rbxassetid://11877292178"
+		image.Rotation = 0
+
+		task.spawn(function()
+			while background and background.Parent do
+				background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				task.wait(0.08)
+				if not background or not background.Parent then break end
+				background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+				task.wait(0.08)
+			end
+		end)
+
+		local ROT_AMPLITUDE = 10
+		local PERIOD = 0.1
+		local JITTER_X = 15
+		local JITTER_Y = 15
+
+		local t0 = tick()
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			if not image or not image.Parent then
+				if conn then conn:Disconnect() end
+				return
+			end
+			local elapsed = tick() - t0
+			local s = math.sin(2 * math.pi * elapsed / PERIOD)
+			image.Rotation = ROT_AMPLITUDE * s
+			local offsetX = math.sin(5 * math.pi * elapsed / (PERIOD * 1.3)) * JITTER_X
+			local offsetY = math.cos(5 * math.pi * elapsed / (PERIOD * 1.1)) * JITTER_Y
+			image.Position = UDim2.new(0.5, offsetX, 0.5, offsetY)
+		end)
+		
+        local function runSizeSequence(targetImage, toggles, waitTime)
+			if not targetImage or not targetImage.Parent then return end
+			for i = 1, toggles do
+				targetImage.Size = UDim2.new(0, 100, 0, 100)
+				if i == toggles then
+					task.wait(waitTime)
+					break
+				end
+				task.wait(waitTime)
+				if not targetImage or not targetImage.Parent then return end
+				targetImage.Size = UDim2.new(0, 200, 0, 200)
+				task.wait(waitTime)
+			end
+		end
+
+		runSizeSequence(image, TOGGLES, WAIT_BETWEEN)
+		
+    	if sound and sound.Parent then
+			pcall(function() sound:Play() end)
+		end
+
+		local bigTween = TweenService:Create(image, TweenInfo.new(FINAL_TWEEN_DURATION, Enum.EasingStyle.Linear), {Size = FINAL_SIZE})
+		bigTween:Play()
+
+		task.wait(1.5)
+		if sound then pcall(function() sound:Destroy() end) end
+		if screen then pcall(function() screen:Destroy() end) end
+		if conn then pcall(function() conn:Disconnect() end) end
+
+		task.wait(0.7)
+		if sound then sound:Destroy() end
+		if screen then screen:Destroy() end
+		if conn then
+			pcall(function() conn:Disconnect() end)
+		end
+	end
+end)
+
+entity:SetCallback("CrucifixionOverwrite", function()
+    print("Custom crucifixion callback")
+end)
+
+---====== Run entity ======---
+
+entity:Run()
