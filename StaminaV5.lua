@@ -4,48 +4,48 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = player.PlayerGui
 
 local TweenService = game:GetService("TweenService")
-local camera = workspace.CurrentCamera
-
-local NORMAL_FOV = 70
-local SPRINT_FOV = 85
-local FOV_TWEEN_TIME = 1
-
-local currentFovTween
-
-local function setFOV(targetFov)
-	if currentFovTween then
-		currentFovTween:Cancel()
-	end
-
-	currentFovTween = TweenService:Create(
-		camera,
-		TweenInfo.new(
-			FOV_TWEEN_TIME,
-			Enum.EasingStyle.Quad,
-			Enum.EasingDirection.Out
-		),
-		{FieldOfView = targetFov}
-	)
-
-	currentFovTween:Play()
-end
 
 local sprintBarBackground = Instance.new("Frame")
 sprintBarBackground.Size = UDim2.new(0.4, 0, 0.04, 0)
 sprintBarBackground.Position = UDim2.new(0.3, 0, 0.8, 0)
-sprintBarBackground.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-sprintBarBackground.BorderSizePixel = 5
+sprintBarBackground.BackgroundColor3 = Color3.fromRGB(39,32,32)
+sprintBarBackground.BorderSizePixel = 0
 sprintBarBackground.Parent = screenGui
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(0.3,0)
+bgCorner.Parent = sprintBarBackground
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255,255,255)
+stroke.Thickness = 3
+stroke.Parent = sprintBarBackground
+
+local gradientStroke = Instance.new("UIGradient")
+gradientStroke.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(0,135,145)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(105,245,255))
+}
+gradientStroke.Rotation = -90
+gradientStroke.Parent = stroke
 
 local sprintBar = Instance.new("Frame")
 sprintBar.Size = UDim2.new(1, 0, 1, 0)
-sprintBar.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
-sprintBar.BorderSizePixel = 5
+sprintBar.BackgroundColor3 = Color3.fromRGB(255,255,255)
+sprintBar.BorderSizePixel = 0
 sprintBar.Parent = sprintBarBackground
 
 local barCorner = Instance.new("UICorner")
-barCorner.CornerRadius = UDim.new(1, 0)
+barCorner.CornerRadius = UDim.new(0.3,0)
 barCorner.Parent = sprintBar
+
+local barGradient = Instance.new("UIGradient")
+barGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(0,135,145)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(105,245,255))
+}
+barGradient.Rotation = 0
+barGradient.Parent = sprintBar
 
 local darkScreen = Instance.new("Frame")
 darkScreen.Size = UDim2.new(1,0,1,0)
@@ -74,61 +74,86 @@ local function updateDarkScreen()
 end
 
 local sprintButton = Instance.new("TextButton")
-sprintButton.Size = UDim2.new(0.1, 0, 0.15, 0)
+sprintButton.Size = UDim2.new(0, 80, 0, 80)
 sprintButton.Position = UDim2.new(0.9, -50, 0.4, -50)
 sprintButton.Text = "Sprint"
-sprintButton.TextSize = 15
-sprintButton.BackgroundColor3 = Color3.fromRGB(175, 115, 25)
-sprintButton.AutoButtonColor = true
+sprintButton.TextScaled = true
+sprintButton.Font = Enum.Font.GothamBold
+sprintButton.TextColor3 = Color3.fromRGB(255,255,255)
+
+sprintButton.BackgroundColor3 = Color3.fromRGB(100,100,100)
+sprintButton.BackgroundTransparency = 0.1
+sprintButton.BorderSizePixel = 0
 sprintButton.Parent = screenGui
 
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(1, 0)
+corner.CornerRadius = UDim.new(0.2,0)
 corner.Parent = sprintButton
+
+local bgGradient = Instance.new("UIGradient")
+bgGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(150,150,150)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(100,100,100))
+}
+bgGradient.Rotation = 90
+bgGradient.Parent = sprintButton
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 4
+stroke.Color = Color3.fromRGB(105,245,255)
+stroke.Transparency = 0
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = sprintButton
+
+local strokeGradient = Instance.new("UIGradient")
+strokeGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(55,125,130)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(105,245,255))
+}
+strokeGradient.Rotation = -90
+strokeGradient.Parent = stroke
 
 local UIS = game:GetService("UserInputService")
 
 sprintButton.MouseButton1Down:Connect(function()
+    sprintButton.TextTransparency = 0.3
+    sprintButton.BackgroundTransparency = 0.4
 	if canSprint and currentStamina > 0 then
 		sprinting = true
 		player.Character:SetAttribute("SpeedBoost", 3)
-		setFOV(SPRINT_FOV)
 	end
 end)
 
 sprintButton.MouseButton1Up:Connect(function()
+    sprintButton.TextTransparency = 0
+    sprintButton.BackgroundTransparency = 0.1
 	sprinting = false
 	player.Character:SetAttribute("SpeedBoost", 0)
-	setFOV(NORMAL_FOV)
 end)
 
 UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
 	if input.KeyCode == Enum.KeyCode.LeftShift then
+	sprintButton.TextTransparency = 0.3
+	sprintButton.BackgroundTransparency = 0.4
 		if canSprint and currentStamina > 0 then
 			sprinting = true
-			player.Character:SetAttribute("SpeedBoost", 3)
-			setFOV(SPRINT_FOV)
+			player.Character:SetAttribute("SpeedBoost", 4)
 		end
 	end
 end)
 
 UIS.InputEnded:Connect(function(input)
 	if input.KeyCode == Enum.KeyCode.LeftShift then
+	sprintButton.TextTransparency = 0
+	sprintButton.BackgroundTransparency = 0.1
 		sprinting = false
 		player.Character:SetAttribute("SpeedBoost", 0)
-		setFOV(NORMAL_FOV)
 	end
 end)
 
 local runService = game:GetService("RunService")
-
-runService.RenderStepped:Connect(function()
-	if sprinting then
-		camera.FieldOfView = math.max(camera.FieldOfView, SPRINT_FOV)
-	end
-end)
 
 runService.Heartbeat:Connect(function(dt)
     if sprinting then
@@ -138,7 +163,6 @@ runService.Heartbeat:Connect(function(dt)
             sprinting = false
             canSprint = false
             player.Character:SetAttribute("SpeedBoost", 0)
-            setFOV(NORMAL_FOV)
             
             local noStamernaSound = Instance.new("Sound",workspace)
 			noStamernaSound.SoundId = "rbxassetid://8258601891"
