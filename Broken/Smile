@@ -1,0 +1,127 @@
+---====== Load Spawner ======---
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+local SmileColor = Instance.new("ColorCorrectionEffect", game.Lighting)
+SmileColor.Name = "SmileWarn" 
+SmileColor.TintColor = Color3.fromRGB(255, 0, 0)
+SmileColor.Saturation = -0.7 
+SmileColor.Contrast = 0.2 
+
+local CameraShaker = require(game.ReplicatedStorage.CameraShaker)
+local camera = game.Workspace.CurrentCamera
+local camShake = CameraShaker.new(Enum.RenderPriority.Camera.Value, function(shakeCf)
+    camera.CFrame = camera.CFrame * shakeCf
+end)
+
+camShake:Start()
+camShake:ShakeOnce(10, 3, 0.1, 6, 2, 0.5)
+
+local cue2 = Instance.new("Sound")
+cue2.Parent = game.Workspace
+cue2.Name = "Spawn"
+cue2.SoundId = "rbxassetid://6891548543"
+cue2.Volume = 4
+cue2.PlaybackSpeed = 0.8
+cue2:Play()
+
+task.wait(4)
+
+---====== Create entity ======---
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "Smile",
+		Asset = "rbxassetid://10422371891",
+		HeightOffset = 2
+	},
+	Lights = {
+		Flicker = {
+			Enabled = false,
+			Duration = 1
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {3.5, 20, 0.1, 0.5}
+	},
+	Movement = {
+		Speed = 200,
+		Delay = 0.01,
+		Reversed = true
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 2,
+		Max = math.random(2, 3),
+		Delay = 0.3
+	},
+	Damage = {
+		Enabled = true,
+		Range = 50,
+		Amount = 125
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 60,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"You died to ???", "Smile...", "Hide when this happens!", "The bell and the smile"},
+		Cause = "Smile"
+	}
+})
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+    local model = entity.Model
+    local part = model.PrimaryPart
+    local sound = Instance.new("Sound", part)
+         sound.SoundId = "rbxassetid://80345507609839"
+         sound.Volume = 0.4
+         sound.RollOffMinDistance = 100
+         sound.RollOffMaxDistance = 150
+         sound.PlaybackSpeed = 0.3
+         sound.Looped = true
+         sound:Play()
+    local a = sound:Clone()
+         a.Parent = part
+         a.SoundId = "rbxassetid://127751543523558"
+         a.Volume = 1
+         a.RollOffMinDistance = 50
+         a.RollOffMaxDistance = 70
+         a.PlaybackSpeed = 0.3
+         a.Looped = true
+         a:Play()
+end)
+
+entity:SetCallback("OnDespawning", function()
+    local model = entity.Model
+    game.TweenService:Create(SmileColor, TweenInfo.new(5), {
+    TintColor = Color3.fromRGB(255, 255, 255),
+    Saturation = 0,
+    Contrast = 0
+    }):Play()
+    wait(5)
+    cue2:Destroy()
+    SmileColor:Destroy()
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
+		require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
+	end
+end)
+
+---====== Run entity ======---
+
+entity:Run()
