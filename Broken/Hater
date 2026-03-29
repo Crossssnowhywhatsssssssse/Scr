@@ -1,0 +1,136 @@
+local Kill = true
+local Range = 10
+local DamagePerTick = 5
+local DamageCooldown = 1
+
+local player = game.Players.LocalPlayer
+
+local hater = game:GetObjects("rbxassetid://12266358809")[1]
+if not hater then return end
+
+hater.Parent = workspace
+hater.Name = "Hater"
+
+local part = hater:FindFirstChildWhichIsA("BasePart")
+if not part then
+	hater:Destroy()
+	return
+end
+
+for i,v in pairs(part:GetDescendants()) do
+			if v.Name == "PointLight" then
+				v:Destroy()
+			end
+end
+
+local att = part.Attachment
+local face = att.ParticleEmitter 
+local black = att.BlackTrail
+
+black.Brightness = 1
+black.Rate = 15000
+black.Lifetime = NumberRange.new(0.5, 0.5)
+black.Rotation = NumberRange.new(45, 45)
+black.RotSpeed = NumberRange.new(-500, 500)
+black.Speed = NumberRange.new(0, 9)
+black.SpreadAngle = Vector2.new(0, 15)
+black.Color = ColorSequence.new{
+      ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 255)),
+      ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+}
+
+face.Texture = "rbxassetid://117733778412225"
+face.Lifetime = NumberRange.new(0.1, 0.5)
+face.Rate = 1000000
+face.Rotation = NumberRange.new(-15, 15)
+face.RotSpeed = NumberRange.new(-50, 50)
+face.Speed = NumberRange.new(0, 25)
+face.SpreadAngle = Vector2.new(0, 0)
+
+local rooms = workspace:WaitForChild("CurrentRooms"):GetChildren()
+table.sort(rooms, function(a,b)
+	return tonumber(a.Name) < tonumber(b.Name)
+end)
+
+local lastRoom = rooms[#rooms - 1] or rooms[#rooms]
+if lastRoom and lastRoom:FindFirstChild("Parts") then
+	local floor = lastRoom.Parts:FindFirstChild("Floor")
+	if floor then
+		part.CFrame = floor.CFrame + Vector3.new(0,6,0)
+	end
+end
+
+local TweenService = game:GetService("TweenService")
+local dead = false
+
+task.spawn(function()
+	while Kill do
+		task.wait(DamageCooldown)
+
+		if not player.Character then continue end
+		
+		local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+		local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+
+		if not hrp or not humanoid then continue end
+
+		local dist = (hrp.Position - part.Position).Magnitude
+		
+		if dist <= Range then
+			if humanoid.Health > 0 then
+				humanoid:TakeDamage(DamagePerTick)
+			end
+
+			if humanoid.Health <= 0 and not dead then
+				dead = true
+
+				firesignal(
+					game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+					{"You died to Hater...", "It drains your health if you get too close.", "Keep your distance next time!"},
+					"Blue"
+				)
+
+				task.wait()
+				game.ReplicatedStorage.GameStats["Player_"..player.Name].Total.DeathCause.Value = "Hater"
+			end
+		end
+	end
+end)
+
+local PointLight1 = Instance.new("PointLight", part)
+local PointLight2 = Instance.new("PointLight", part)
+local PointLight3 = Instance.new("PointLight", part)
+PointLight1.Color = Color3.new(1,0,0)
+PointLight2.Color = Color3.new(1,0,0)
+PointLight3.Color = Color3.new(1,0,0)
+PointLight1.Enabled = true
+PointLight2.Enabled = true
+PointLight3.Enabled = true
+PointLight1.Range = 0
+PointLight2.Range = 0
+PointLight3.Range = 0
+PointLight1.Brightness = 5
+PointLight2.Brightness = 30
+PointLight3.Brightness = 2
+PointLight1.Shadows = true
+PointLight2.Shadows = true
+PointLight3.Shadows = true
+
+TweenService:Create(PointLight1, TweenInfo.new(3), {Range = 20}):Play()
+TweenService:Create(PointLight2, TweenInfo.new(5), {Range = 6}):Play()
+TweenService:Create(PointLight3, TweenInfo.new(5), {Range = 60}):Play()
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+Kill = false
+
+task.spawn(function()
+	TweenService:Create(PointLight1, TweenInfo.new(10), {Range = 0}):Play()
+    TweenService:Create(PointLight2, TweenInfo.new(10), {Range = 0}):Play()
+    TweenService:Create(PointLight1, TweenInfo.new(10), {Brightness = 0}):Play()
+    TweenService:Create(PointLight2, TweenInfo.new(10), {Brightness = 0}):Play()
+    TweenService:Create(PointLight3, TweenInfo.new(10), {Brightness = 0}):Play()
+    face.Enabled = false
+    TweenService:Create(black, TweenInfo.new(8), {Brightness = 0}):Play()
+    wait(11)
+	hater:Destroy()
+end)
