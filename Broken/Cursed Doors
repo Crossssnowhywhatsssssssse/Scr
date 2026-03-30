@@ -1,0 +1,135 @@
+local latestRoom = game.ReplicatedStorage.GameData.LatestRoom.Value
+
+    --// Config
+    local SoundId = "rbxassetid://9125712561"
+    local ScreamDuration = 20
+
+    --// Setup
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Workspace = game:GetService("Workspace")
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local PointLight = Instance.new("PointLight")
+    
+    local player = Players.LocalPlayer
+    local latestRoom = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom")
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+
+    --// Create sound
+    local sound = Instance.new("Sound")
+    sound.SoundId = SoundId
+    sound.Volume = 2
+    sound.Looped = false
+    sound.Parent = Workspace
+    sound:Play()
+    
+    --// Light
+    PointLight.Parent = game.Workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value].RoomExit
+    PointLight.Brightness = 10
+    PointLight.Color = Color3.new(1, 0, 0)
+    PointLight.Range = 0
+    PointLight.Enabled = true
+    TweenService:Create(PointLight, TweenInfo.new(10), {Range = 7}):Play()
+    
+    --// Death trigger
+    local active = true
+    
+    --// Red Flash
+    local function createRedFlash()
+        local lighting = game:GetService("Lighting")
+        local colorEffect = Instance.new("ColorCorrectionEffect")
+        colorEffect.TintColor = Color3.new(1, 0, 0)
+        colorEffect.Brightness = 0
+        colorEffect.Enabled = true
+        colorEffect.Parent = lighting
+
+        TweenService:Create(colorEffect, TweenInfo.new(0.2), {Brightness = 2}):Play()
+        task.wait(0.2)
+        TweenService:Create(colorEffect, TweenInfo.new(0.5), {Brightness = 0}):Play()
+        task.wait(0.5)
+
+        colorEffect:Destroy()
+    end
+    
+    --// Death
+    local function onRoomChange()
+        if active and humanoid and humanoid.Health > 0 then
+            local player = game.Players.LocalPlayer
+            local gui = Instance.new("ScreenGui")
+            gui.IgnoreGuiInset = true
+            gui.ResetOnSpawn = false
+            gui.Parent = player:WaitForChild("PlayerGui")
+
+            local black = Instance.new("Frame")
+            black.Size = UDim2.new(1,0,1,0)
+            black.BackgroundColor3 = Color3.new(0,0,0)
+            black.BackgroundTransparency = 0
+            black.Parent = gui
+
+            local TweenService = game:GetService("TweenService")
+            local running = true
+
+            task.spawn(function()
+            	while running do
+            		task.wait(0.0001)
+		
+            		local img = Instance.new("ImageLabel")
+            		img.BackgroundTransparency = 1
+            		img.Image = "rbxassetid://129936362344207"
+		
+            		local startSize = math.random(200,500)
+            		img.Size = UDim2.new(0,startSize,0,startSize)
+		
+            		img.Position = UDim2.new(math.random(),math.random(),math.random(),math.random())
+            		img.Rotation = math.random(-25, 25)
+            		img.Parent = gui
+		
+            	end
+            end)
+            
+           local die = Instance.new("Sound")
+                    die.SoundId = "rbxassetid://138850305566950"
+                    die.Volume = 2
+                    die.Parent = Workspace
+                    die:Play()
+                    die.Ended:Connect(function()
+                            die:Destroy()
+                    end)
+
+            task.wait(3)
+            running = false
+            gui:Destroy()
+            humanoid.Health = 0
+            firesignal(ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to the Cursed Door...", "Do not open doors when something screams!", "Patience could save you."}, "Blue")
+            task.wait(0.1)
+
+            createRedFlash()
+
+            if ReplicatedStorage:FindFirstChild("GameStats") and ReplicatedStorage.GameStats:FindFirstChild("Player_"..player.Name) then
+                  ReplicatedStorage.GameStats["Player_"..player.Name].Total.DeathCause.Value = "Cursed Door"
+            end
+        end
+    end
+
+    latestRoom.Changed:Connect(onRoomChange)
+
+    --// Despawn
+    task.delay(ScreamDuration, function()
+    if humanoid.Health < 0 then return end
+        active = false
+        if sound then
+            sound:Destroy()
+            TweenService:Create(PointLight, TweenInfo.new(5), {Range = 0}):Play()
+        end
+
+        --// Vanish sound
+        local vanishSound = Instance.new("Sound")
+        vanishSound.SoundId = "rbxassetid://9125713306"
+        vanishSound.Volume = 2
+        vanishSound.Parent = Workspace
+        vanishSound:Play()
+        vanishSound.Ended:Connect(function()
+            vanishSound:Destroy()
+            PointLight:Destroy()
+        end)
+    end)
