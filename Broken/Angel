@@ -1,0 +1,102 @@
+local plr = game.Players.LocalPlayer
+local chr = plr.Character
+local hrp = chr:WaitForChild("HumanoidRootPart")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = plr:WaitForChild("PlayerGui")
+
+local black = Instance.new("Frame")
+black.Size = UDim2.new(1,0,1,0)
+black.BackgroundColor3 = Color3.new(1,1,1)
+black.BackgroundTransparency = 0
+black.Parent = gui
+
+local dmg = true
+local s = game:GetObjects("rbxassetid://121128782273259")[1]
+s.Parent = game.Workspace
+s.Name = "Angel"
+local entity = s:FindFirstChildWhichIsA("BasePart")
+entity.CanCollide = true
+entity.Anchored = true
+
+local att = entity.Attachment
+local face = att.Face
+face.Brightness = 0.1
+face.Texture = "rbxassetid://70863183193037"
+face.LightInfluence = 0.1
+face.LightEmission = 0.1
+face.Lifetime = NumberRange.new(0.1, 0.8)
+face.Rate = 1000
+face.Rotation = NumberRange.new(0, 0)
+face.Speed = NumberRange.new(0, 5)
+face.Color = ColorSequence.new(Color3.new(1,1,1))
+
+local Bubble = att.Bubble
+Bubble.Lifetime = NumberRange.new(1, 5)
+Bubble.Size = NumberSequence.new(10)
+Bubble.Brightness = 0.3
+Bubble.Color = ColorSequence.new{
+      ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+      ColorSequenceKeypoint.new(1, Color3.new(1,1,0))
+}
+
+for i,v in pairs(s:GetDescendants()) do
+			if v:IsA("Sound") or v:IsA("PointLight") or v.Name == "Glow purple" or v.Name == "GlitchEffect" or v.Name == "Black" then
+				v:Destroy()
+			end
+end
+
+entity.CFrame = game.Workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value].RoomEntrance.CFrame * CFrame.new(0, 1, -15)
+
+TweenService:Create(black, TweenInfo.new(5), {
+	BackgroundTransparency = 1
+}):Play()
+
+local warn = Instance.new("Sound")
+        warn.SoundId = "rbxassetid://87277735534502"
+        warn.PlaybackSpeed = 0.8
+        warn.Volume = 5
+        warn.Parent = Workspace
+        warn:Play()
+        
+wait(1)
+TweenService:Create(warn, TweenInfo.new(math.random(2, 3)), {
+	PlaybackSpeed = 0
+}):Play()
+wait(math.random(2.6, 3))
+warn:Destroy()
+wait(1)
+gui:Destroy()
+local lastPos = hrp.Position
+local checking = true
+
+RunService.RenderStepped:Connect(function()
+	if checking and chr.Humanoid.Health > 0 then
+		local currentPos = hrp.Position
+		local delta = (currentPos - lastPos).Magnitude
+		
+		if delta > 0.001 then
+			chr.Humanoid.Health -= 1.5
+			ReplicatedStorage.GameStats["Player_"..plr.Name].Total.DeathCause.Value = "Angel"
+			if chr.Humanoid.Health < 0 then
+			    checking = false
+			end
+		end
+		
+		lastPos = currentPos
+	end
+end)
+
+wait(4)
+face.Enabled = false
+checking = false
+wait(0.3)
+entity.Anchored = false
+entity.CanCollide = false
+local debris = game:GetService("Debris")
+debris:AddItem(s, 3)
