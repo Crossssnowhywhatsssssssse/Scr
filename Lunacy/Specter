@@ -1,0 +1,180 @@
+function GetRoom()
+        local gruh = workspace.CurrentRooms
+        return gruh:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value)
+end
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local dmg = true
+local lighting = game:GetService("Lighting")
+local tweenservice = game:GetService("TweenService")
+
+function LoadCustomInstance(source, parent)
+	local model
+
+	-- Normalize GitHub URL if needed
+	local function NormalizeGitHubURL(url)
+		if url:match("^https://github.com/.+%.rbxm$") and not url:find("?raw=true") then
+			return url .. "?raw=true"
+		end
+		return url
+	end
+
+	while task.wait() and not model do
+		if type(source) == "number" or tostring(source):match("^%d+$") then
+			-- Asset ID loading
+			local success, result = pcall(function()
+				return game:GetObjects("rbxassetid://" .. tostring(source))[1]
+			end)
+
+			if success and result then
+				model = result
+			end
+
+		elseif type(source) == "string" and source:match("^https?://") and source:match("%.rbxm") then
+			-- GitHub URL loading
+			local url = NormalizeGitHubURL(source)
+			
+			local success, result = pcall(function()
+				local fileName = "temp_" .. tostring(math.random(100000, 999999)) .. ".rbxm"
+				writefile(fileName, game:HttpGet(url))
+				local obj = game:GetObjects((getcustomasset or getsynasset)(fileName))[1]
+				delfile(fileName)
+				return obj
+			end)
+
+			if success and result then
+				model = result
+			end	
+		else
+					break
+		end
+
+		if model then
+			model.Parent = workspace
+
+			for _, obj in ipairs(model:GetDescendants()) do
+				if obj:IsA("Script") or obj:IsA("LocalScript") then
+					obj:Destroy()
+				end
+			end
+
+			pcall(function()
+				model:SetAttribute("LoadedByExecutor", true)
+			end)
+		end
+	end
+
+	return model
+end
+	
+local CameraShaker = require(game.ReplicatedStorage.CameraShaker)
+local camera = game.Workspace.CurrentCamera
+local camShake = CameraShaker.new(Enum.RenderPriority.Camera.Value, function(shakeCf)
+camera.CFrame = camera.CFrame * shakeCf
+end)
+
+local s = LoadCustomInstance("https://github.com/uknowiejiekeeowowowoeeo/A/raw/main/SO%20PEC%20TER.rbxm", workspace)
+local entityModel = s:FindFirstChildWhichIsA("BasePart")
+if not entityModel then return end
+entityModel.CFrame = GetRoom():WaitForChild("RoomEntrance").CFrame * CFrame.new(0,1,-15)
+entityModel.PointLight:Destroy()
+entityModel.Attachment.ParticleEmitter.Enabled = false
+
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.SoundId = "rbxassetid://165969964"
+	cue.Volume = 5
+	cue.PlaybackSpeed = 3
+	cue:Play()
+	cue.Ended:Connect(function()
+            cue:Destroy()
+    end)
+
+local light = Instance.new("PointLight",entityModel)
+light.Color = Color3.fromRGB(255, 0, 0)
+light.Brightness = 50
+light.Range = 200
+light.Shadows = true
+
+tweenservice:Create(light,TweenInfo.new(5,Enum.EasingStyle.Linear),{Range = 20}):Play()
+tweenservice:Create(light,TweenInfo.new(5,Enum.EasingStyle.Linear),{Brightness = 5}):Play()
+
+local sound = entityModel.Sound
+sound.PlaybackSpeed = 3
+sound.RollOffMaxDistance = 5000
+sound.RollOffMinDistance = 500
+sound.Volume = 2
+
+tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0.05}):Play()
+
+local a = Instance.new("DistortionSoundEffect",sound)
+a.Level = 0.5
+local b = Instance.new("DistortionSoundEffect",sound)
+b.Level = 0.5
+local c = Instance.new("PitchShiftSoundEffect",sound)
+c.Octave = 0.5
+local d = Instance.new("PitchShiftSoundEffect",sound)
+d.Octave = 0.5
+local e = Instance.new("DistortionSoundEffect",sound)
+e.Level = 0.75
+local f = Instance.new("DistortionSoundEffect",sound)
+f.Level = 0.5
+local g = Instance.new("DistortionSoundEffect",sound)
+g.Level = 0.5
+entityModel.Attachment.ParticleEmitter.Enabled = true
+entityModel.Attachment.ParticleEmitter.Rate = 99999
+
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = lighting
+
+local color = Instance.new("ColorCorrectionEffect")
+color.TintColor = Color3.fromRGB(255, 50, 50)
+color.Contrast = 0
+color.Brightness = 0
+color.Parent = lighting
+
+tweenservice:Create(blur, TweenInfo.new(5), {Size = 10}):Play()
+tweenservice:Create(color, TweenInfo.new(6), {
+    Contrast = 0.5,
+    Brightness = -0.2
+}):Play()
+
+game.Workspace.CurrentRooms.ChildAdded:Connect(function()
+   dmg = false
+   tweenservice:Create(color, TweenInfo.new(3), {
+    Contrast = 0,
+    Brightness = 0,
+    TintColor = Color3.fromRGB(255, 255, 255)
+   }):Play()
+   tweenservice:Create(blur, TweenInfo.new(2), {Size = 0}):Play()
+   tweenservice:Create(light,TweenInfo.new(3,Enum.EasingStyle.Linear),{Range = 0}):Play()
+   tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+   task.wait(3)
+   s:Destroy()
+   color:Destroy()
+   blur:Destroy()
+end)
+
+task.wait(5)
+tweenservice:Create(sound,TweenInfo.new(15,Enum.EasingStyle.Linear),{PlaybackSpeed = 0.5}):Play()
+task.spawn(function()
+	while dmg == true do
+    task.wait(0.2)
+    
+    camShake:Start()
+    camShake:ShakeOnce(5, 5, 5, 1, 1, 1)
+
+	local _ , camera = game.Workspace.CurrentCamera:WorldToViewportPoint(entityModel.Position)
+      	if not camera then
+                       chr.Humanoid:TakeDamage(2)
+                       if chr.Humanoid.Health <= 0 then
+                            dmg = false
+                            game.ReplicatedStorage.GameStats["Player_".. plr.Name].Total.DeathCause.Value = "Specter"
+                            firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"An entity similar to Eyes, but operating in the opposite way.", "It will emit sound and light.", "It's very noisy.", "It will lead to deaths by other entities due to noise."},"Blue")
+                            break end
+          end
+    end
+end)
