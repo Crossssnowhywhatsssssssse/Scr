@@ -1,0 +1,130 @@
+function GetRoom()
+        local gruh = workspace.CurrentRooms
+        return gruh:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value)
+end
+
+function LoadCustomInstance(source, parent)
+	local model
+
+	-- Normalize GitHub URL if needed
+	local function NormalizeGitHubURL(url)
+		if url:match("^https://github.com/.+%.rbxm$") and not url:find("?raw=true") then
+			return url .. "?raw=true"
+		end
+		return url
+	end
+
+	while task.wait() and not model do
+		if type(source) == "number" or tostring(source):match("^%d+$") then
+			-- Asset ID loading
+			local success, result = pcall(function()
+				return game:GetObjects("rbxassetid://" .. tostring(source))[1]
+			end)
+
+			if success and result then
+				model = result
+			end
+
+		elseif type(source) == "string" and source:match("^https?://") and source:match("%.rbxm") then
+			-- GitHub URL loading
+			local url = NormalizeGitHubURL(source)
+			
+			local success, result = pcall(function()
+				local fileName = "temp_" .. tostring(math.random(100000, 999999)) .. ".rbxm"
+				writefile(fileName, game:HttpGet(url))
+				local obj = game:GetObjects((getcustomasset or getsynasset)(fileName))[1]
+				delfile(fileName)
+				return obj
+			end)
+
+			if success and result then
+				model = result
+			end
+		else
+					break
+		end
+
+		if model then
+			model.Parent = workspace
+
+			for _, obj in ipairs(model:GetDescendants()) do
+				if obj:IsA("Script") or obj:IsA("LocalScript") then
+					obj:Destroy()
+				end
+			end
+
+			pcall(function()
+				model:SetAttribute("LoadedByExecutor", true)
+			end)
+		end
+	end
+
+	return model
+end
+
+local tweenservice = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
+local chr = plr.Character
+local dmg = true
+
+local s = LoadCustomInstance("https://github.com/uknowiejiekeeowowowoeeo/A/raw/main/godly%20new.rbxm")
+local primary_part = s:FindFirstChildWhichIsA("BasePart") or s:FindFirstChildWhichIsA("Part")
+entity = primary_part
+entity.CFrame = GetRoom():WaitForChild("RoomEntrance").CFrame * CFrame.new(0,2,-15)
+entity.CanCollide = false
+entity.Anchored = true
+
+local theme = entity.PlaySound
+local sound = entity.Footsteps
+
+local function getRandomRGBColor()
+    local r = math.random(195, 255)
+    local g = r
+    local b = math.random(0, 100)
+    return Color3.fromRGB(r, g, b)
+end
+
+tweenservice:Create(theme,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0.05}):Play()
+tweenservice:Create(theme,TweenInfo.new(10,Enum.EasingStyle.Linear),{Volume = 2}):Play()
+tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0.5}):Play()
+tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{Volume = 2}):Play()
+
+entity.Attachment.PointLight:Destroy()
+entity.Attachment.PointLight.Shadows = true
+
+local face = entity.Attachment.Eyes
+face.Lifetime = NumberRange.new(0.1, 1)
+face.Rate = 50
+face.RotSpeed = NumberRange.new(-15, 15)
+face.Speed = NumberRange.new(0, 0)
+
+task.spawn(function()
+      while dmg == true do
+           task.wait(1)
+                   tweenservice:Create(entity.Attachment.PointLight,TweenInfo.new(1,Enum.EasingStyle.Linear),{Range = math.random(10, 40)}):Play()
+                   tweenservice:Create(entity.Attachment.PointLight,TweenInfo.new(1,Enum.EasingStyle.Linear),{Brightness = math.random(5, 25)}):Play()
+                   tweenservice:Create(entity.Attachment.PointLight,TweenInfo.new(1,Enum.EasingStyle.Linear),{Color = getRandomRGBColor()}):Play()
+            if not dmg then break end
+      end
+end)
+
+task.wait(5)
+game.Workspace.CurrentRooms.ChildAdded:Connect(function()
+    dmg = false
+    task.wait(1)
+    tweenservice:Create(theme,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+    tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+    tweenservice:Create(entity.Attachment.PointLight,TweenInfo.new(5,Enum.EasingStyle.Linear),{Range = 0}):Play()
+    task.wait(5.3)
+    s:Destroy()
+end)
+
+while true do task.wait(1.5)
+      if dmg == true then
+         chr.Humanoid:TakeDamage(1.5)
+              if chr.Humanoid.Health <= 0 then
+                  game.ReplicatedStorage.GameStats["Player_".. plr.Name].Total.DeathCause.Value = "The Godly"
+                            break end
+              elseif dmg == false then break
+      end
+end
