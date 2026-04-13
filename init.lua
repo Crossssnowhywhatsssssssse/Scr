@@ -488,21 +488,11 @@ local function GetNodesFromRoom(room: Model, reversed: boolean): { BasePart }
 		nodes[1] = n
 	end
 	
-	for i, v in pairs(room:GetDescendants()) do
-			if v.Name == room.Name then
-				local n = v:Clone()
-        		n.Name = "0"
-	        	n.CFrame -= Vector3.new(0, 6, 0)
-        		nodes[#nodes + 1] = n
-			end
+	for _, obj in next, room:GetDescendants() do
+    	if obj.Name == room.Name then
+	    	nodes[#nodes + 1] = obj
+    	end
     end
-
-	local nodesFolder = room:FindFirstChild("PathfindNodes")
-	if nodesFolder then
-		for _, n in next, nodesFolder:GetChildren() do
-			nodes[#nodes + 1] = n
-		end
-	end
 
 	local roomExit = room:FindFirstChild("RoomExit")
 	if roomExit then
@@ -514,12 +504,15 @@ local function GetNodesFromRoom(room: Model, reversed: boolean): { BasePart }
 	end
 
 	table.sort(nodes, function(a: BasePart, b: BasePart)
-        if reversed then
-            return tonumber(a.Name) > tonumber(b.Name)
-        else
-            return tonumber(a.Name) < tonumber(b.Name)
-        end
-	end)
+	local aDist = (a.Position - roomEntrance.Position).Magnitude
+	local bDist = (b.Position - roomEntrance.Position).Magnitude
+
+	if reversed then
+       		return aDist > bDist
+    	else
+	       	return aDist < bDist
+    	end
+    end)
 
 	return nodes
 end
