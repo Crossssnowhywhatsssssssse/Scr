@@ -490,8 +490,13 @@ local function GetNodesFromRoom(room: Model, reversed: boolean): { BasePart }
 	
 	for _, obj in next, room:GetDescendants() do
     	if obj.Name == room.Name then
+            obj.CFrame -= Vector3.new(0, 5, 0)
 	    	nodes[#nodes + 1] = obj
     	end
+        if obj.Name == "BlockedDoor" then
+            obj.CFrame -= Vector3.new(0, 5, 0)
+	    	nodes[#nodes + 1] = obj
+	    end
     end
 
 	local roomExit = room:FindFirstChild("RoomExit")
