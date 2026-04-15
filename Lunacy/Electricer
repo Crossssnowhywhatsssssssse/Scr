@@ -1,0 +1,211 @@
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local hrp = chr:WaitForChild("HumanoidRootPart")
+local hum = chr:WaitForChild("Humanoid")
+local cam = workspace.CurrentCamera
+local tweenservice = game:GetService("TweenService")
+local offsetgyat = math.random(5, 10)
+local dmg = true
+local hit = 1.5
+local connections = {}
+
+local dmgSound = Instance.new("Sound")
+dmgSound.Name = "ElectricDmgSound"
+dmgSound.SoundId = "rbxassetid://91683529666804"
+dmgSound.Volume = 2
+dmgSound.Parent = hrp
+
+local pAttachCenter = Instance.new("Attachment", chr:WaitForChild("UpperTorso"))
+local eAttachOrigin = Instance.new("Attachment")
+eAttachOrigin.Position = Vector3.new(0, 0, 0) 
+
+local function CreateCurvedBeam(name, att0, att1, curve)
+    local b = Instance.new("Beam")
+    b.Name = name
+    b.Attachment0 = att0
+    b.Attachment1 = att1
+    b.Texture = "rbxassetid://101714879822964"
+    b.TextureMode = Enum.TextureMode.Wrap
+    b.TextureSpeed = 6
+    b.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+    })
+    b.Width0 = 1.3
+    b.Width1 = 0.7
+    b.LightEmission = 10
+    b.Segments = 20 
+    b.CurveSize0 = curve 
+    b.CurveSize1 = -curve 
+    b.FaceCamera = true
+    b.Enabled = false
+    b.Parent = workspace
+    return b
+end
+
+local beamL = CreateCurvedBeam("BeamLeft", eAttachOrigin, pAttachCenter, 2)
+local beamR = CreateCurvedBeam("BeamRight", eAttachOrigin, pAttachCenter, -2)
+
+local function ShakeCamera(intensity)
+    task.spawn(function()
+        local startTime = tick()
+        local duration = 0.1 
+        while tick() - startTime < duration do
+            local x = math.rad(math.random(-intensity, intensity) / 10)
+            local y = math.rad(math.random(-intensity, intensity) / 10)
+            cam.CFrame = cam.CFrame * CFrame.Angles(x, y, 0)
+            task.wait()
+        end
+    end)
+end
+
+local function Dmg()
+    if not dmg or not hum or hum.Health <= 0 then return end
+    hit += 0.05
+    hum:TakeDamage(hit)
+    
+    dmgSound.TimePosition = 0 
+    if not dmgSound.IsPlaying then dmgSound:Play() end
+    
+    ShakeCamera(7) 
+    local tweenInfo = TweenInfo.new(0.05, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true)
+    tweenservice:Create(beamL, tweenInfo, {Width0 = 2.5, Width1 = 1.2, CurveSize0 = 4.5, CurveSize1 = -4.5}):Play()
+    tweenservice:Create(beamR, tweenInfo, {Width0 = 2.5, Width1 = 1.2, CurveSize0 = -4.5, CurveSize1 = 4.5}):Play()
+
+    local ReSt = game:GetService("ReplicatedStorage") 
+    local stats = ReSt:FindFirstChild("GameStats")
+    if stats then
+        local plrStat = stats:FindFirstChild("Player_"..plr.Name)
+        if plrStat and plrStat:FindFirstChild("Total") then
+            local death = plrStat.Total:FindFirstChild("DeathCause")
+            if death then death.Value = "Electricer" end
+        end
+    end
+end
+
+local function handle(obj)
+    if obj.Name == "PlaySound" and obj:IsA("Sound") then
+        obj.PlaybackSpeed = 20
+        obj.Volume = 1
+    elseif obj.Name == "Desp" and obj:IsA("Sound") then
+        obj.PlaybackSpeed = 0.5
+        obj.Volume = 1
+    elseif obj.Name == "BlackTrail" then
+           obj:Destroy()
+    elseif obj.Name == "Light" then
+           obj.Range = 15
+           obj.Brightness = 10
+    elseif obj.Name == "ParticleEmitter" then
+           obj.Lifetime = NumberRange.new(0.1, 0.1)
+           obj.Rate = 50
+           obj.Size = NumberSequence.new(4)
+    end
+end
+
+function LoadCustomInstance(source)
+	local model
+	local function NormalizeGitHubURL(url)
+		if url:match("^https://github.com/.+%.rbxm$") and not url:find("?raw=true") then
+			return url .. "?raw=true"
+		end
+		return url
+	end
+	while task.wait() and not model do
+		if type(source) == "number" or tostring(source):match("^%d+$") then
+			local success, result = pcall(function()
+				return game:GetObjects("rbxassetid://" .. tostring(source))[1]
+			end)
+			if success and result then model = result end
+		elseif type(source) == "string" and source:match("^https?://") and source:match("%.rbxm") then
+			local url = NormalizeGitHubURL(source)
+			local success, result = pcall(function()
+				local fileName = "temp_" .. tostring(math.random(100000, 999999)) .. ".rbxm"
+				writefile(fileName, game:HttpGet(url))
+				local obj = game:GetObjects((getcustomasset or getsynasset)(fileName))[1]
+				delfile(fileName)
+				return obj
+			end)
+			if success and result then model = result end
+		else break end
+		if model then
+			for _, obj in ipairs(model:GetDescendants()) do
+				if obj:IsA("Script") or obj:IsA("LocalScript") then obj:Destroy() end
+			end
+			pcall(function() model:SetAttribute("LoadedByExecutor", true) end)
+		end
+	end
+	return model
+end
+
+local Electricer = LoadCustomInstance("https://github.com/uknowiejiekeeowowowoeeo/A/raw/main/Bolt.rbxm")
+if not Electricer then return end
+Electricer.Parent = workspace
+
+local primary_part = Electricer:FindFirstChildWhichIsA("BasePart") or Electricer:FindFirstChildWhichIsA("Part")
+if not primary_part then Electricer:Destroy() return end
+
+Electricer.PrimaryPart = primary_part
+Electricer:SetPrimaryPartCFrame(chr.HumanoidRootPart.CFrame * CFrame.new(0, 0, -offsetgyat))
+Electricer.PrimaryPart.CanCollide = true
+
+eAttachOrigin.Parent = primary_part
+beamL.Parent = Electricer
+beamR.Parent = Electricer
+
+local moveAttach = Instance.new("Attachment", primary_part)
+local moveForce = Instance.new("LinearVelocity", moveAttach)
+moveForce.MaxForce = math.huge
+moveForce.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
+moveForce.Attachment0 = moveAttach
+
+for _, v in ipairs(Electricer:GetDescendants()) do handle(v) end
+connections = Electricer.DescendantAdded:Connect(function(obj) handle(obj) end)
+
+local function LookAt()
+    if not Electricer or not Electricer.Parent or not cam then return false end
+    local diff = Electricer.PrimaryPart.Position - cam.CFrame.Position
+    if diff.Magnitude == 0 then return false end
+    return (diff / diff.Magnitude):Dot(cam.CFrame.LookVector) > 0.85
+end
+
+task.wait(1)
+task.spawn(function()
+    while dmg == true do
+        if not Electricer or not Electricer.Parent or not dmg then break end
+        task.wait(0.1)
+        if LookAt() then
+            Dmg()
+            beamL.Enabled = true
+            beamR.Enabled = true
+            local direction = (hrp.Position - Electricer.PrimaryPart.Position).Unit
+            moveForce.VectorVelocity = direction * 35
+            hrp.Velocity = direction * 25
+        else
+            beamL.Enabled = false
+            beamR.Enabled = false
+            moveForce.VectorVelocity = Vector3.new(0,0,0)
+            if dmgSound.IsPlaying then dmgSound:Stop() end
+        end
+    end
+end)
+
+task.wait(3)
+if Electricer and Electricer.Parent then
+    connections:Disconnect()
+    dmg = false
+    beamL:Destroy()
+    beamR:Destroy()
+    moveForce:Destroy()
+    if dmgSound then
+        dmgSound:Stop()
+        dmgSound:Destroy()
+    end
+    Electricer.PrimaryPart.Attachment.ParticleEmitter.Enabled = false
+    tweenservice:Create(Electricer.PrimaryPart.Desp,TweenInfo.new(3,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+    tweenservice:Create(Electricer.PrimaryPart.PlaySound,TweenInfo.new(3,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+    tweenservice:Create(Electricer.PrimaryPart.Attachment.Light,TweenInfo.new(3,Enum.EasingStyle.Linear),{Range = 0}):Play()
+    task.wait(3)
+    pAttachCenter:Destroy()
+    Electricer:Destroy()
+end
