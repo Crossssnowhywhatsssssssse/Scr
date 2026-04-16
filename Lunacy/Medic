@@ -1,0 +1,157 @@
+---====== local ======---
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local hrp = chr:WaitForChild("HumanoidRootPart")
+local hum = chr:WaitForChild("Humanoid")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+---====== Local ======---
+local dmg = true
+local Speed = 5
+local Distance = 10
+local CheckUnder = 10
+local HeightOffset = 6
+local Direction = Vector3.new(1,0,0)
+local Amount = 0.75
+local Interval = 0.25
+local Range = 20
+
+---====== Entity ======---
+local s = game:GetObjects("rbxassetid://121128782273259")[1]
+s.Parent = workspace
+s.Name = "Medic"
+
+local part = s:FindFirstChildWhichIsA("BasePart")
+part.Name = "MedicNew"
+part.CanCollide = true
+part.Anchored = false
+
+local att = part:FindFirstChildOfClass("Attachment")
+if not att then
+    att = Instance.new("Attachment")
+    att.Parent = part
+end
+
+-- LinearVelocity
+local lv = Instance.new("LinearVelocity")
+lv.Attachment0 = att
+lv.MaxForce = math.huge
+lv.RelativeTo = Enum.ActuatorRelativeTo.World
+lv.Parent = part
+
+-- Effects
+local face = att:FindFirstChild("Face")
+if face then
+    face.Brightness = 0.1
+    face.Texture = "rbxassetid://111533053510042"
+    face.LightInfluence = 0.1
+    face.LightEmission = 0.1
+    face.Lifetime = NumberRange.new(0.1, 0.1)
+    face.Rate = 1000
+    face.Orientation = Enum.ParticleOrientation.FacingCamera
+    face.Rotation = NumberRange.new(0, 0)
+    face.Speed = NumberRange.new(0, 0)
+    face.Color = ColorSequence.new(Color3.new(1,1,1))
+    face.Size = NumberSequence.new(4)
+    face.Squash = NumberSequence.new(0)
+end
+
+local Bubble = att:FindFirstChild("Bubble")
+if Bubble then
+    Bubble.Lifetime = NumberRange.new(1, 5)
+    Bubble.Brightness = 0.3
+    Bubble.Orientation = Enum.ParticleOrientation.FacingCamera
+    Bubble.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+        ColorSequenceKeypoint.new(1, Color3.new(1,0,1))
+    }
+    Bubble.Size = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 5),
+        NumberSequenceKeypoint.new(1, 10)
+    }
+end
+
+-- Cleanup
+for _,v in pairs(s:GetDescendants()) do
+    if v:IsA("Sound") or v:IsA("PointLight") or v.Name == "Glow purple" or v.Name == "GlitchEffect" or v.Name == "Black" then
+        v:Destroy()
+    end
+end
+
+-- Spawn position
+part.CFrame = workspace.CurrentRooms[ReplicatedStorage.GameData.LatestRoom.Value]
+    .RoomEntrance.CFrame * CFrame.new(0, 1, -15)
+
+-- Raycast
+local rayParams = RaycastParams.new()
+rayParams.FilterDescendantsInstances = {part}
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local function getRandomDirection()
+    local x = math.random(-100,100)/100
+    local z = math.random(-100,100)/100
+    return Vector3.new(x,0,z).Unit
+end
+
+-- Change direction
+task.spawn(function()
+    while dmg do
+        if not part or not part.Parent then break end
+        Direction = getRandomDirection()
+        task.wait(5)
+    end
+end)
+
+---====== Move ======---
+local connect
+connect = RunService.Heartbeat:Connect(function()
+    if not part or not part.Parent or not dmg then
+        if connect then connect:Disconnect() end
+        return
+    end
+
+    local frontHit = workspace:Raycast(part.Position, Direction * Distance, rayParams)
+    if frontHit then
+        Direction = Direction - 2 * Direction:Dot(frontHit.Normal) * frontHit.Normal
+    end
+
+    local groundHit = workspace:Raycast(part.Position, Vector3.new(0, -CheckUnder, 0), rayParams)
+
+    local yVelocity = part.AssemblyLinearVelocity.Y
+
+    if groundHit then
+        local targetY = groundHit.Position.Y + HeightOffset
+        local diff = targetY - part.Position.Y
+        yVelocity = diff * 10
+    end
+
+    lv.VectorVelocity = Vector3.new(
+        Direction.X * Speed,
+        yVelocity,
+        Direction.Z * Speed
+    )
+end)
+
+-- Heal
+task.spawn(function()
+    while dmg do
+        task.wait(Interval)
+        if not part or not part.Parent then break end
+
+        if hum and hrp and hum.Health > 0 then
+            local distance = (hrp.Position - part.Position).Magnitude
+            if distance <= Range then
+                hum.Health = math.min(hum.Health + Amount, hum.MaxHealth)
+            end
+        end
+    end
+end)
+
+---====== Despawn ======---
+workspace.CurrentRooms.ChildAdded:Connect(function()
+    dmg = false
+    if connect then connect:Disconnect() end
+    if s then s:Destroy() end
+end)
