@@ -143,7 +143,7 @@ task.spawn(function()
         if hum and hrp and hum.Health > 0 then
             local distance = (hrp.Position - part.Position).Magnitude
             if distance <= Range then
-                hum.Health = math.min(hum.Health + Amount, hum.MaxHealth)
+                hum.Health = math.min(hum.Health + Amount, 50)
             end
         end
     end
