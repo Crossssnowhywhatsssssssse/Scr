@@ -19,7 +19,7 @@ shut.Input.console:Destroy()
 shut.Input.pc:Destroy()
 shut.Input.mobile.Icon:Destroy()
 shut.Input.mobile.Text = "Play"
-shut.Desc.Text = "Script is loading. Hold on!"
+shut.Desc.Text = ""
 shut.Title.Text = "Degenerate Mode"
 shut.Position = UDim2.new(0.5, 0, 1, 0)
 
@@ -30,6 +30,7 @@ shut.Input.mobile.MouseButton1Click:Connect(function()
         hasClicked = true
         shut.Input.mobile.Active = false
         local loading = ""
+        shut.Desc.Text = "Script is loading. Hold on!"
         
         for i = 1, 100 do
             loading = tostring(i) .. "%"
