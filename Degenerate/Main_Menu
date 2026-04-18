@@ -1,0 +1,37 @@
+local plr = game:GetService("Players").LocalPlayer
+local gui = plr.PlayerGui
+local main = gui.MainUI
+local menu = main.CheckPlatform
+local hasClicked = false
+
+local shut = menu:Clone()
+shut.Name = "Menu Degenerate Mode"
+shut.Parent = main
+shut.Visible = true
+shut.Input.console:Destroy()
+shut.Input.pc:Destroy()
+shut.Input.mobile.Icon:Destroy()
+shut.Input.mobile.Text = "Play"
+shut.Desc.Text = "Script is loading. Hold on!"
+shut.Title.Text = "Degenerate Mode"
+shut.Position = UDim2.new(0.5, 0, 1, 0)
+
+game:GetService("TweenService"):Create(shut,TweenInfo.new(3,Enum.EasingStyle.Linear),{Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+task.wait(3)
+shut.Input.mobile.MouseButton1Click:Connect(function()
+    if not hasClicked then
+        hasClicked = true
+        shut.Input.mobile.Active = false
+        local loading = ""
+        
+        for i = 1, 100 do
+            loading = tostring(i) .. "%"
+            shut.Input.mobile.Text = loading
+            task.wait(0.2)
+        end
+        
+        shut.Input.mobile.Text = "Finished!"
+        task.wait(2)
+        shut:Destroy()
+    end
+end)
