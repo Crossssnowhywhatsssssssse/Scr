@@ -1,0 +1,68 @@
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.BorderSizePixel = 0
+frame.BackgroundTransparency = 1
+frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  
+frame.Position = UDim2.new(1, -320, 1, -35)
+frame.Size = UDim2.new(0, 310, 0, 25)
+
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0.25, 0)
+
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = Color3.fromRGB(255, 224, 189) 
+stroke.Thickness = 4
+
+local bar = Instance.new("Frame", frame)
+bar.Position = UDim2.new(0.016, 0, 0.19, 0)
+bar.Size = UDim2.new(0, 0, 0, 15)
+bar.BackgroundColor3 = Color3.fromRGB(8, 255, 8) 
+bar.BorderSizePixel = 0
+
+local corner1 = Instance.new("UICorner", bar)
+corner1.CornerRadius = UDim.new(0.25, 0)
+
+local percentText = Instance.new("TextLabel", frame)
+percentText.Size = UDim2.new(1, 0, 1, 0)
+percentText.Position = UDim2.new(0, 0, 0, 0)
+percentText.BackgroundTransparency = 1
+percentText.Text = "0%"
+percentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+percentText.TextScaled = true
+percentText.Font = Enum.Font.DenkOne
+percentText.ZIndex = 2
+
+local num = Instance.new("NumberValue", frame)
+num.Value = 0
+_G.num = num
+
+local currentTween
+
+num.Changed:Connect(function()
+	local value = math.clamp(num.Value, 0, 300)
+	local percent = math.floor(value / 3)
+	
+	percentText.Text = percent .. "%"
+	
+	if currentTween then
+		currentTween:Cancel()
+	end
+
+	currentTween = TweenService:Create(
+		bar,
+		TweenInfo.new(0.5, Enum.EasingStyle.Linear),
+		{Size = UDim2.new(0, value, 0, 15)}
+	)
+
+	currentTween:Play()
+
+	if value >= 300 then
+		task.wait(0.5)
+		num.Value = 0	
+	end
+end)
