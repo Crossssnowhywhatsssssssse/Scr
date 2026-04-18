@@ -1,0 +1,117 @@
+_G.DO_RED_GUY = true
+
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local DeathName = "DeathBackgroundBlue"
+
+local RedPrimary = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 255, 63)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 255, 63))
+})
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local MainUI = PlayerGui:WaitForChild("MainUI", 10)
+if not MainUI then return end
+
+local Death = MainUI:WaitForChild("Death", 10)
+local HelpfulDialogue = Death and Death:FindFirstChild("HelpfulDialogue")
+
+local MainGame = MainUI:FindFirstChild("Initiator") and MainUI.Initiator:FindFirstChild("Main_Game")
+local Health = MainGame and MainGame:FindFirstChild("Health")
+local Music = Health and Health:FindFirstChild("Music")
+
+local function getGitSoundId(url, name)
+	local sound = Instance.new("Sound")
+
+	if getcustomasset and writefile and isfile then
+		local file = name..".mp3"
+		
+		if not isfile(file) then 
+			writefile(file, game:HttpGet(url)) 
+		end
+
+		sound.SoundId = getcustomasset(file)
+
+		task.spawn(function()
+			sound.Loaded:Wait()
+			
+			if delfile and isfile(file) then
+				pcall(function()
+					delfile(file)
+				end)
+			end
+		end)
+	end
+
+	return sound
+end
+
+Camera.ChildAdded:Connect(function(child)
+	if child.Name ~= DeathName then return end
+	if not _G.DO_RED_GUY then return end
+
+	if Music then
+		for _, asset in ipairs(Music:GetChildren()) do
+			if asset:IsA("Sound") then
+				asset:Destroy()
+			end
+		end
+	end
+
+	local Lights = child:FindFirstChild("Lights")
+	local Fog = child:FindFirstChild("FogAndSmaller")
+	local Water = child:FindFirstChild("Water")
+
+	if Lights then
+		for _, light in ipairs(Lights:GetDescendants()) do
+			if light:IsA("SpotLight") then
+				light.Color = Color3.fromRGB(195, 135, 255)
+			elseif light:IsA("ParticleEmitter") then
+				light.Color = RedPrimary
+			end
+		end
+
+		local BigLight = Lights:FindFirstChild("BigLight")
+		if BigLight then
+			local attachment = BigLight:FindFirstChild("Attachment")
+			if attachment then
+				local moon = attachment:FindFirstChild("Moon")
+				if moon then
+					moon.Texture = "rbxassetid://130309546296276"
+				end
+			end
+		end
+	end
+
+	if Fog then
+		for _, f in ipairs(Fog:GetChildren()) do
+			if f:IsA("ParticleEmitter") then
+				f.Color = RedPrimary
+			end
+		end
+	end
+
+	if Water then
+		for _, w in ipairs(Water:GetChildren()) do
+			if w:IsA("ParticleEmitter") then
+				w.Color = RedPrimary
+			end
+		end
+	end
+
+	if HelpfulDialogue then
+		HelpfulDialogue.TextColor3 = Color3.fromRGB(25, 255, 63)
+	end
+
+	local customMusic = getGitSoundId(
+		"https://github.com/Darker-TheDarkestGuy/DOORS/raw/refs/heads/main/iLoveYt.net_YouTube_DOORS-THE-GARDEN-Sneak-Peek-RECREATED-OS_Media_dfR7v_R7KOg_004_360p.mp3",
+		"ViridisLight"
+	)
+
+	customMusic.Parent = Music
+	customMusic.Looped = false
+	customMusic.Volume = 2
+	customMusic:Play()
+end)
