@@ -1,0 +1,134 @@
+local paints = {
+	{"rbxassetid://7307744965","What."},
+	{"rbxassetid://7307771824","Something is wrong..."},
+	{"rbxassetid://12121515069","666"},
+	{"rbxassetid://101186147631403","End"},
+	{"rbxassetid://10464367758","Entity"},
+	{"rbxassetid://12121857746","???"},
+	{"rbxassetid://7255938903","Intruder?"},
+	{"rbxassetid://90271691150427","Familiar."}
+}
+
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local Rooms = workspace:WaitForChild("CurrentRooms")
+local LatestRoom = RS:WaitForChild("GameData"):WaitForChild("LatestRoom")
+
+local player = Players.LocalPlayer
+
+local function getGitImage(url, name)
+	local file = name..".png"
+
+	if getcustomasset and writefile and isfile then
+		if not isfile(file) then
+			writefile(file, game:HttpGet(url))
+		end
+
+		local asset = getcustomasset(file)
+
+		task.spawn(function()
+			task.wait(1)
+			if delfile and isfile(file) then
+				pcall(function()
+					delfile(file)
+				end)
+			end
+		end)
+
+		return asset
+	else
+		warn("No getcustomasset support")
+		return ""
+	end
+end
+
+local lastIndex = 0
+local function getRandomPaint()
+	local index
+	repeat
+		index = math.random(1, #paints)
+	until index ~= lastIndex or #paints <= 1
+	lastIndex = index
+	return paints[index]
+end
+
+local function applyRoom(room)
+	local paintings = {}
+
+	for _, obj in ipairs(room:GetDescendants()) do
+		if obj.Name:find("Painting") then
+			table.insert(paintings, obj)
+		end
+	end
+
+	if #paintings == 0 then return end
+
+	for _, painting in ipairs(paintings) do
+		local canvas = painting:FindFirstChild("Canvas")
+		if not canvas then continue end
+
+		local gui = canvas:FindFirstChildOfClass("SurfaceGui")
+		if not gui then continue end
+		gui.LightInfluence = 0
+		gui.Brightness = 1
+
+		local imageLabel = gui:FindFirstChildOfClass("ImageLabel")
+		if not imageLabel then continue end
+		imageLabel.ImageColor3 = Color3.new(1,1,1)
+        imageLabel.ImageTransparency = 0
+
+		local selected = getRandomPaint()
+		local img = selected[1]
+
+		if string.find(img, "http") then
+			local name = "p_"..tostring(os.clock()):gsub("%.","")..math.random(100,999)
+			img = getGitImage(img, name)
+		end
+
+		if img and img ~= "" then
+			imageLabel.Image = img
+		end
+
+		local prompt = painting:FindFirstChild("InteractPrompt")
+		if prompt and not painting:FindFirstChild("fakeInteract") then
+			
+			local clone = prompt:Clone()
+			clone.Name = "fakeInteract"
+			clone.Parent = painting
+			prompt:Destroy()
+
+			clone.Triggered:Connect(function()
+				local mainGameModule = player.PlayerGui
+					:WaitForChild("MainUI", 10)
+					:WaitForChild("Initiator", 10)
+					:FindFirstChild("Main_Game")
+
+				if not mainGameModule then return end
+
+				local success, mainGame = pcall(require, mainGameModule)
+				if success and mainGame and mainGame.caption then
+					mainGame.caption(
+						'This painting is titled "'..selected[2]..'"',
+						true
+					)
+				end
+			end)
+		end
+	end
+end
+
+LatestRoom.Changed:Connect(function()
+	task.wait(0.01)
+	local room = Rooms:FindFirstChild(LatestRoom.Value)
+	if room then
+		applyRoom(room)
+	end
+end)
+
+task.spawn(function()
+	task.wait(0.01)
+	local room = Rooms:FindFirstChild(LatestRoom.Value)
+	if room then
+		applyRoom(room)
+	end
+end)
