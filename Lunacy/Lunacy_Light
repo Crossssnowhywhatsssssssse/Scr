@@ -1,0 +1,124 @@
+_G.DO_PURPLE_GUY = true
+
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+
+local DeathNames = {
+	DeathBackgroundBlue = true,
+	DeathBackgroundYellow = true
+}
+
+local PurplePrimary = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(126, 5, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(126, 5, 255))
+})
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local MainUI = PlayerGui:WaitForChild("MainUI", 10)
+if not MainUI then return end
+
+local Death = MainUI:WaitForChild("Death", 10)
+local HelpfulDialogue = Death and Death:FindFirstChild("HelpfulDialogue")
+
+local Initiator = MainUI:FindFirstChild("Initiator")
+local MainGame = Initiator and Initiator:FindFirstChild("Main_Game")
+local Health = MainGame and MainGame:FindFirstChild("Health")
+local Music = Health and Health:FindFirstChild("Music")
+
+local cachedId
+
+local function getGitSoundId(url, name)
+	if cachedId then return cachedId end
+
+	if getcustomasset and writefile and isfile then
+		local file = name..".mp3"
+
+		if not isfile(file) then 
+			writefile(file, game:HttpGet(url)) 
+		end
+
+		cachedId = getcustomasset(file)
+
+		task.spawn(function()
+			task.wait(0.5)
+			if delfile and isfile(file) then
+				pcall(delfile, file)
+			end
+		end)
+
+		return cachedId
+	end
+
+	return nil
+end
+
+local triggered = {}
+
+Camera.ChildAdded:Connect(function(child)
+	if not DeathNames[child.Name] then return end
+	if not _G.DO_PURPLE_GUY then return end
+	if triggered[child] then return end
+    triggered[child] = true
+
+	if Music then
+		local id = getGitSoundId(
+			"https://github.com/Whatttt23/Scr/raw/main/LunacyLight.mp3",
+			"LunacyLight"
+		)
+
+		if id then
+			for _, asset in ipairs(Music:GetChildren()) do
+				if asset:IsA("Sound") and (asset.Name == "Blue" or asset.Name == "Yellow") then
+					asset.SoundId = id
+					asset.Volume = 1
+				end
+			end
+		end
+	end
+
+	local Lights = child:FindFirstChild("Lights")
+	if Lights then
+		for _, light in ipairs(Lights:GetDescendants()) do
+			if light:IsA("SpotLight") then
+				light.Color = Color3.fromRGB(126, 5, 255)
+			elseif light:IsA("ParticleEmitter") then
+				light.Color = PurplePrimary
+			end
+		end
+
+		local BigLight = Lights:FindFirstChild("BigLight")
+		local attachment = BigLight and BigLight:FindFirstChild("Attachment")
+		local moon = attachment and attachment:FindFirstChild("Moon")
+
+		if moon then
+			moon.Texture = "rbxassetid://109873817425197"
+		end
+	end
+
+	local Fog = child:FindFirstChild("FogAndSmaller")
+	if Fog then
+		for _, f in ipairs(Fog:GetChildren()) do
+			if f:IsA("ParticleEmitter") then
+				f.Color = PurplePrimary
+			end
+		end
+	end
+
+	local Water = child:FindFirstChild("Water")
+	if Water then
+		for _, w in ipairs(Water:GetChildren()) do
+			if w:IsA("ParticleEmitter") then
+				w.Color = PurplePrimary
+			end
+		end
+	end
+
+	if HelpfulDialogue then
+		HelpfulDialogue.TextColor3 = Color3.fromRGB(126, 5, 255)
+		HelpfulDialogue.Font = Enum.Font.SciFi
+		HelpfulDialogue.TextStrokeTransparency = 0
+		HelpfulDialogue.TextStrokeColor3 = Color3.fromRGB(195, 145, 255)
+	end
+end)
