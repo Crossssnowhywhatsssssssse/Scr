@@ -1,0 +1,171 @@
+local function GetGitSound(url, name)
+    local fileName = name .. ".mp3"
+    local success, result = pcall(function()
+        if not isfile(fileName) then
+            writefile(fileName, game:HttpGet(url))
+        end
+        return (getcustomasset or getsynasset)(fileName)
+    end)
+    return success and result or ""
+end
+
+local chaseSoundId = GetGitSound("https://github.com/vuivuiviu2/The-Lunacy-Rebirth/raw/refs/heads/main/SEEK%20LUNACY.mp3", "SeekLunacy")
+local colaScriptUrl = "https://raw.githubusercontent.com/vuivuiviu2/The-Lunacy-Rebirth/refs/heads/main/Lunacy%20Cola"
+
+workspace.ChildAdded:Connect(function(seek)
+    if seek.Name == "SeekMovingNewClone" then
+        task.wait(0.1)
+        
+        local music = seek:WaitForChild("SeekMusic")
+        if chaseSoundId ~= "" then 
+            music.SoundId = chaseSoundId 
+        end
+
+        task.spawn(function()
+            local function runCola()
+                pcall(function() loadstring(game:HttpGet(colaScriptUrl))() end)
+            end
+            for i = 1, 3 do
+                runCola()
+                task.wait(0.1)
+            end
+        end)
+
+        task.spawn(function()
+            local RunService = game:GetService("RunService")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local Players = game:GetService("Players")
+            local CurrentRooms = workspace:WaitForChild("CurrentRooms")
+            local latestRoomValue = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom")
+
+            local ASSET_ID = "rbxassetid://103743945115748"
+            local speed = 70 
+            local maxFlights = 6
+            local maxStuckTime = 1.5
+            local scaleFactor = 0.25 
+            local lightFactor = 0.25 
+
+            local function spawnModel()
+                local success, objects = pcall(function() return game:GetObjects(ASSET_ID) end)
+                if success and objects[1] then
+                    local m = objects[1]
+                    m.Parent = workspace
+                    
+                    if m:IsA("BasePart") then
+                        m.Size = m.Size * scaleFactor
+                        m.Anchored = true
+                        m.CanCollide = false
+                    end
+                    for _, v in pairs(m:GetDescendants()) do
+                        if v:IsA("BasePart") then v.Size = v.Size * scaleFactor; v.Anchored = true; v.CanCollide = false end
+                        if v:IsA("PointLight") or v:IsA("SpotLight") then
+                            v.Brightness = v.Brightness * lightFactor
+                        end
+                    end
+                    return m
+                end
+            end
+
+            local models = {spawnModel(), spawnModel()}
+            local targetPos, arrived, stuckTime, flightCount = nil, false, 0, 0
+
+            local function getClosestPlayerPos()
+                local char = Players.LocalPlayer.Character
+                return char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Position
+            end
+
+            local function getDoorPos(room)
+                if not room then return nil end
+                local door = room:FindFirstChild("Door")
+                if not door then return nil end
+                local target = door:IsA("Model") and (door.PrimaryPart or door:FindFirstChildWhichIsA("BasePart")) or door
+                if target then return target.Position + Vector3.new(0, 3, 0) end
+            end
+
+            local function updateRoom()
+                if flightCount >= maxFlights then 
+                    for _, m in ipairs(models) do if m then m:Destroy() end end
+                    models = {}
+                    return 
+                end
+                
+                local id = latestRoomValue.Value
+                local prevRoom = CurrentRooms:FindFirstChild(tostring(id - 1))
+                local currentRoom = CurrentRooms:FindFirstChild(tostring(id))
+                local prevPos, currPos = getDoorPos(prevRoom), getDoorPos(currentRoom)
+                
+                if prevPos and currPos then
+                    for _, m in ipairs(models) do
+                        if m then m.CFrame = CFrame.new(prevPos, currPos) end
+                    end
+                    targetPos, arrived, stuckTime = currPos, false, 0
+                    flightCount += 1
+                end
+            end
+
+            local heartbeatConn
+            heartbeatConn = RunService.Heartbeat:Connect(function(dt)
+                
+                if not seek or not seek.Parent or #models == 0 then 
+                    for _, m in ipairs(models) do if m then m:Destroy() end end
+                    heartbeatConn:Disconnect()
+                    return 
+                end
+
+                if arrived or not targetPos then return end
+                
+                local playerPos = getClosestPlayerPos()
+                
+                for _, m in ipairs(models) do
+                    if m and m.Parent then
+                        local currentPos = m.Position
+                        local direction = (targetPos - currentPos)
+                        local dist = direction.Magnitude
+                        
+                        if dist < 4 then
+                            arrived = true
+                            return
+                        end
+                        
+                        local moveStep, dirUnit = math.min(dist, speed * dt), direction.Unit
+                        
+                        local rayParams = RaycastParams.new()
+                        rayParams.FilterDescendantsInstances = {m}
+                        rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                        
+                        local forwardRay = workspace:Raycast(currentPos, dirUnit * 8, rayParams)
+                        local rightDir = Vector3.new(dirUnit.Z, 0, -dirUnit.X)
+                        local leftDir = -rightDir
+                        
+                        local nextPos = currentPos + dirUnit * moveStep
+                        
+                        if forwardRay then
+                            local rayRight = workspace:Raycast(currentPos, (dirUnit + rightDir).Unit * 8, rayParams)
+                            local rayLeft = workspace:Raycast(currentPos, (dirUnit + leftDir).Unit * 8, rayParams)
+                            
+                            local avoidDir = rightDir 
+                            if rayRight and not rayLeft then avoidDir = leftDir end
+                            
+                            nextPos = currentPos + avoidDir * moveStep
+                            stuckTime += dt
+                            if stuckTime >= maxStuckTime then nextPos = currentPos + dirUnit * moveStep end
+                        else
+                            stuckTime = 0
+                        end
+                        
+                        if playerPos then
+                            m.CFrame = CFrame.lookAt(nextPos, Vector3.new(playerPos.X, playerPos.Y, playerPos.Z))
+                        else
+                            m.CFrame = CFrame.lookAt(nextPos, targetPos)
+                        end
+                    end
+                end
+            end)
+
+            latestRoomValue:GetPropertyChangedSignal("Value"):Connect(updateRoom)
+            updateRoom()
+        end)
+    end
+end)
+
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption(" ", true)
