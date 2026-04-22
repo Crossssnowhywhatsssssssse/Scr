@@ -1,15 +1,32 @@
-local function GetGitSound(url, name)
-    local fileName = name .. ".mp3"
-    local success, result = pcall(function()
-        if not isfile(fileName) then
-            writefile(fileName, game:HttpGet(url))
-        end
-        return (getcustomasset or getsynasset)(fileName)
-    end)
-    return success and result or ""
+local cache = {}
+
+local function getGitSoundId(url, name)
+	if cache[name] then return cache[name] end
+
+	if getcustomasset and writefile and isfile then
+		local file = name..".mp3"
+
+		if not isfile(file) then 
+			writefile(file, game:HttpGet(url)) 
+		end
+
+		local id = getcustomasset(file)
+		cache[name] = id
+
+		task.spawn(function()
+			task.wait(1)
+			if delfile and isfile(file) then
+				pcall(delfile, file)
+			end
+		end)
+
+		return id
+	end
+
+	return nil
 end
 
-local chaseSoundId = GetGitSound("https://github.com/vuivuiviu2/The-Lunacy-Rebirth/raw/refs/heads/main/SEEK%20LUNACY.mp3", "SeekLunacy")
+local chaseSoundId = getGitSoundId("https://github.com/vuivuiviu2/The-Lunacy-Rebirth/raw/refs/heads/main/SEEK%20LUNACY.mp3", "SeekLunacy")
 local colaScriptUrl = "https://raw.githubusercontent.com/vuivuiviu2/The-Lunacy-Rebirth/refs/heads/main/Lunacy%20Cola"
 
 workspace.ChildAdded:Connect(function(seek)
