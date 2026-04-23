@@ -3,16 +3,6 @@ _G.DO_PURPLE_GUY = true
 local Players = game:GetService("Players")
 local Camera = workspace.CurrentCamera
 
-local DeathNames = {
-	DeathBackgroundBlue = true,
-	DeathBackgroundYellow = true
-}
-
-local PurplePrimary = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(126, 5, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(126, 5, 255))
-})
-
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
@@ -27,32 +17,57 @@ local MainGame = Initiator and Initiator:FindFirstChild("Main_Game")
 local Health = MainGame and MainGame:FindFirstChild("Health")
 local Music = Health and Health:FindFirstChild("Music")
 
-local cachedId
+local DeathNames = {
+	DeathBackgroundBlue = true,
+	DeathBackgroundYellow = true
+}
 
-local function getGitSoundId(url, name)
+local PurplePrimary = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(126, 5, 255))
+})
+
+local SoundLink = "https://github.com/Whatttt23/Scr/raw/main/LunacyLight.mp3"
+local SoundName = "LunacyLight"
+
+local cachedId
+local loading = false
+
+local function getGitSoundId()
 	if cachedId then return cachedId end
+	if loading then
+		repeat task.wait() until cachedId
+		return cachedId
+	end
 
 	if getcustomasset and writefile and isfile then
-		local file = name..".mp3"
+		loading = true
+
+		local file = SoundName..".mp3"
 
 		if not isfile(file) then 
-			writefile(file, game:HttpGet(url)) 
+			writefile(file, game:HttpGet(SoundLink)) 
 		end
 
 		cachedId = getcustomasset(file)
 
 		task.spawn(function()
-			task.wait(0.5)
+			task.wait(1)
 			if delfile and isfile(file) then
 				pcall(delfile, file)
 			end
 		end)
 
+		loading = false
 		return cachedId
 	end
 
 	return nil
 end
+
+task.spawn(function()
+	getGitSoundId()
+end)
 
 local triggered = {}
 
@@ -60,23 +75,7 @@ Camera.ChildAdded:Connect(function(child)
 	if not DeathNames[child.Name] then return end
 	if not _G.DO_PURPLE_GUY then return end
 	if triggered[child] then return end
-    triggered[child] = true
-
-	if Music then
-		local id = getGitSoundId(
-			"https://github.com/Whatttt23/Scr/raw/main/LunacyLight.mp3",
-			"LunacyLight"
-		)
-
-		if id then
-			for _, asset in ipairs(Music:GetChildren()) do
-				if asset:IsA("Sound") and (asset.Name == "Blue" or asset.Name == "Yellow") then
-					asset.SoundId = id
-					asset.Volume = 1
-				end
-			end
-		end
-	end
+	triggered[child] = true
 
 	local Lights = child:FindFirstChild("Lights")
 	if Lights then
@@ -121,4 +120,18 @@ Camera.ChildAdded:Connect(function(child)
 		HelpfulDialogue.TextStrokeTransparency = 0
 		HelpfulDialogue.TextStrokeColor3 = Color3.fromRGB(195, 145, 255)
 	end
+
+	task.spawn(function()
+		if not Music then return end
+
+		local id = getGitSoundId()
+		if not id then return end
+
+		for _, asset in ipairs(Music:GetChildren()) do
+			if asset:IsA("Sound") and (asset.Name == "Blue" or asset.Name == "Yellow") then
+				asset.SoundId = id
+				asset.Volume = 1
+			end
+		end
+	end)
 end)
