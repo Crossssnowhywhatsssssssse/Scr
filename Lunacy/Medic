@@ -136,17 +136,19 @@ end)
 
 -- Heal
 task.spawn(function()
-    while dmg do
-        task.wait(Interval)
-        if not part or not part.Parent then break end
+	while dmg do
+		task.wait(Interval)
+		if not part or not part.Parent then break end
 
-        if hum and hrp and hum.Health > 0 then
-            local distance = (hrp.Position - part.Position).Magnitude
-            if distance <= Range then
-                hum.Health = math.min(hum.Health + Amount, 70)
-            end
-        end
-    end
+		if hum and hrp and hum.Health > 0 then
+			local distance = (hrp.Position - part.Position).Magnitude
+			if distance <= Range then
+				if hum.Health < 70 then
+					hum.Health = math.min(hum.Health + Amount, 70)
+				end
+			end
+		end
+	end
 end)
 
 ---====== Despawn ======---
