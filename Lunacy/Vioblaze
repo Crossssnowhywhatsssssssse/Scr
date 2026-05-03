@@ -1,0 +1,269 @@
+-------------------------------
+-- LIGHTFIRECONTROLLER MODULE
+-------------------------------
+
+local Workspace = game:GetService("Workspace")
+
+local spawnedFlames = {}
+local flameParts = {}
+
+local function CreatePurpleFire(position, parent)
+    local flamePart = Instance.new("Part")
+    flamePart.Size = Vector3.new(0.2, 0.2, 0.2)
+    flamePart.Transparency = 1
+    flamePart.Anchored = true
+    flamePart.CanCollide = false
+    flamePart.CFrame = position
+    flamePart.Parent = parent
+
+    local fire = Instance.new("Fire")
+    fire.Name = "PurpleFire"
+    fire.Color = Color3.fromRGB(150, 0, 255)
+    fire.SecondaryColor = Color3.fromRGB(100, 0, 180)
+    fire.Size = 3
+    fire.Heat = 8
+    fire.Parent = flamePart
+
+    table.insert(flameParts, flamePart)
+end
+
+local LightFireController = {}
+
+function LightFireController.StartLightFire()
+    for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+        if room:FindFirstChild("Assets") then
+            for _, obj in pairs(room.Assets:GetDescendants()) do
+                if (obj.Name == "LightStand" or obj.Name == "LightStandSingle") and not spawnedFlames[obj] then
+                    local pivot = obj:GetPivot()
+                    local parent = obj.Parent
+                    CreatePurpleFire(pivot, parent)
+                    spawnedFlames[obj] = true
+                end
+            end
+        end
+    end
+end
+
+function LightFireController.StopLightFire()
+    for _, part in pairs(flameParts) do
+        if part and part.Parent then part:Destroy() end
+    end
+    flameParts = {}
+    spawnedFlames = {}
+end
+
+
+-------------------------------
+-- script thuc the
+-------------------------------
+
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/DOORS-Entity-Spawner-V2/main/init.luau"))()
+
+local entity = Spawner:Create({
+Entity = {
+Name = "Vioblade",
+Asset = "https://github.com/Whatttt23/Scr/raw/main/vioblaze%20tlr.rbxm",
+HeightOffset = 0
+},
+Lights = {
+Flicker = {
+Enabled = false,
+Duration = 1
+},
+Shatter = false,
+Repair = false
+},
+Earthquake = {
+Enabled = false
+},
+CameraShake = {
+Enabled = true,
+Range = 100,
+Values = {3, 40, 0.2, 2}
+},
+Movement = {
+Speed = 150,
+Delay = 7,
+Reversed = false
+},
+Rebounding = {
+Enabled = false,
+Type = "Ambush",
+Min = 1,
+Max = 1,
+Delay = 2
+},
+Damage = {
+Enabled = true,
+IgnoreHiding = false,
+Range = 70,
+Amount = 125
+},
+Crucifixion = {
+Enabled = true,
+Range = 40,
+Resist = false,
+Break = true
+},
+Death = {
+Type = "Guiding",
+Hints = {
+"You died to who you call Flare...",
+"It is not like Rush; it will not flicker the lights to warn you. You must listen for the sound of a roaring fire instead.",
+"Be careful where you step after it passes. The trail of fire it leaves behind is still very dangerous.",
+"Wait for the flames to disappear before leaving your hiding spot."
+},
+Cause = "Vioblaze"
+}
+})
+
+entity:SetCallback("OnSpawned", function()
+     LightFireController.StartLightFire()
+end)
+
+entity:SetCallback("OnStartMoving", function()
+task.spawn(function()  
+    task.wait(0.1)  
+    local model = entity.Model
+      
+    while model and model.Parent do  
+        local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart  
+          
+        if root then  
+            local fireNode = Instance.new("Part")  
+            fireNode.Size = Vector3.new(4, 2, 4)   
+            fireNode.Transparency = 1  
+            fireNode.CanCollide = false  
+            fireNode.CanTouch = true  
+            fireNode.Anchored = true   
+            fireNode.Position = root.Position - Vector3.new(0, 1.5, 0)  
+            fireNode.Parent = game.Workspace  
+              
+            local fire = Instance.new("Fire")  
+            fire.Color = Color3.fromRGB(150, 0, 255)  
+            fire.SecondaryColor = Color3.fromRGB(50, 0, 100)  
+            fire.Size = 15  
+            fire.Heat = 5  
+            fire.Parent = fireNode  
+
+            local light = Instance.new("PointLight")  
+            light.Color = fire.Color  
+            light.Range = 8  
+            light.Brightness = 1.5  
+            light.Parent = fireNode  
+              
+            local touched = false  
+            fireNode.Touched:Connect(function(hit)  
+                if not touched then  
+                    local character = hit.Parent  
+                    local humanoid = character:FindFirstChild("Humanoid")  
+                    if humanoid and character:FindFirstChild("HumanoidRootPart") then  
+                        if humanoid.Health > 5 then  
+                            touched = true  
+                            humanoid:TakeDamage(5)
+                            game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Fire"
+                            task.wait(0.5)   
+                            touched = false  
+                        end  
+                    end  
+                end  
+            end)  
+              
+            game:GetService("Debris"):AddItem(fireNode, 10)  
+        end  
+          
+        task.wait(0.02)  
+    end  
+end)
+end)
+
+entity:SetCallback("OnDespawned", function()
+    LightFireController.StopLightFire()
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+   if newHealth == 0 then
+   firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to who you call Flare...","It is not like Rush it will not flicker the lights to warn you.","You must listen for the sound of a roaring fire instead.","Be careful where you step after it passes. The trail of fire it leaves behind is still very dangerous.","Wait for the flames to disappear before leaving your hiding spot."},"Blue")
+   task.spawn(function()
+   local TweenService = game:GetService("TweenService")	
+   local shadow = game:GetObjects("rbxassetid://11503625408")[1]
+   local gui = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
+   shadow.Parent = gui
+   shadow.Visible = true
+   local sound = Instance.new("Sound")
+   sound.SoundId = "rbxassetid://18564431123"
+   sound.Parent = gui
+   sound.Volume = 0.5
+
+   local octave = Instance.new("PitchShiftSoundEffect",sound)
+   octave.Octave = 0.5
+   local level = Instance.new("DistortionSoundEffect",sound)
+   level.Level = 0.97
+
+   local a = Instance.new("DistortionSoundEffect",sound)
+   a.Level = 0.75
+   local b = Instance.new("DistortionSoundEffect",sound)
+   b.Level = 0.75
+   sound:Play()
+
+   local l__ImageLabel__1 = shadow.ImageLabel;
+   local v2 = Random.new();
+   local l__SizeValue__3 = shadow.SizeValue;
+   local v4 = math.random(1, 6);
+
+    if v4 == 1 then
+    	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    if v4 == 2 then
+    	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    if v4 == 3 then
+   	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    if v4 == 4 then
+    	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    if v4 == 5 then
+    	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    if v4 == 6 then
+    	l__ImageLabel__1.Image = "rbxassetid://135565991196298";
+    end;
+
+    shadow.Jumpscare:Play();
+    for v5 = 1, 35 do
+    local v6 = math.random(1, 6);
+	if v6 == 1 then
+		TweenService:Create(shadow, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(100, 0, 100)}):Play();
+		l__ImageLabel__1.ImageColor3 = Color3.new(0, 0, 0);
+	end;
+	if v6 == 2 then
+		TweenService:Create(shadow, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play();
+		l__ImageLabel__1.ImageColor3 = Color3.new(1, 1, 1);
+	end;
+	if v6 == 3 then
+		TweenService:Create(shadow, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(150, 0, 150)}):Play();
+		l__ImageLabel__1.ImageColor3 = Color3.fromRGB(0, 0, 0);
+	end;
+		l__ImageLabel__1.Position = UDim2.new(v2:NextNumber(0.4, 0.6), 0, v2:NextNumber(0.45, 0.55), 0);
+		l__ImageLabel__1.Size = l__ImageLabel__1.Size + UDim2.new(l__SizeValue__3.Value, 0, l__SizeValue__3.Value, 0);
+		l__ImageLabel__1.Rotation = math.random(-25, 25);
+		l__SizeValue__3.Value = l__SizeValue__3.Value - 0.01;
+		wait(0.001);
+    end;
+		l__ImageLabel__1.ImageColor3 = Color3.new(0, 0, 0);
+		shadow.BackgroundColor3 = Color3.new(0, 0, 0);
+		TweenService:Create(l__ImageLabel__1, TweenInfo.new(2), {ImageTransparency = 1}):Play();
+		TweenService:Create(shadow, TweenInfo.new(3), {BackgroundTransparency = 1}):Play();
+		wait(3);
+		gui:destroy()
+   end)
+   end
+end)
+
+entity:Run(true)
