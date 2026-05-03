@@ -3,7 +3,6 @@ function GetRoom()
         return gruh:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value)
 end
 
-game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
 local plr = game.Players.LocalPlayer
 local chr = plr.Character or plr.CharacterAdded:Wait()
 local dmg = true
