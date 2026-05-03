@@ -27,7 +27,6 @@ local function getGitSoundId(url, name)
 end
 
 local chaseSoundId = getGitSoundId("https://github.com/vuivuiviu2/The-Lunacy-Rebirth/raw/refs/heads/main/SEEK%20LUNACY.mp3", "SeekLunacy")
-local colaScriptUrl = "https://raw.githubusercontent.com/vuivuiviu2/The-Lunacy-Rebirth/refs/heads/main/Lunacy%20Cola"
 
 workspace.ChildAdded:Connect(function(seek)
     if seek.Name == "SeekMovingNewClone" then
@@ -37,16 +36,6 @@ workspace.ChildAdded:Connect(function(seek)
         if chaseSoundId ~= "" then 
             music.SoundId = chaseSoundId 
         end
-
-        task.spawn(function()
-            local function runCola()
-                pcall(function() loadstring(game:HttpGet(colaScriptUrl))() end)
-            end
-            for i = 1, 3 do
-                runCola()
-                task.wait(0.1)
-            end
-        end)
 
         task.spawn(function()
             local RunService = game:GetService("RunService")
