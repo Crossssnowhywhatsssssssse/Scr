@@ -141,22 +141,6 @@ tweenservice:Create(color, TweenInfo.new(6), {
     Brightness = -0.2
 }):Play()
 
-game.Workspace.CurrentRooms.ChildAdded:Connect(function()
-   dmg = false
-   tweenservice:Create(color, TweenInfo.new(3), {
-    Contrast = 0,
-    Brightness = 0,
-    TintColor = Color3.fromRGB(255, 255, 255)
-   }):Play()
-   tweenservice:Create(blur, TweenInfo.new(2), {Size = 0}):Play()
-   tweenservice:Create(light,TweenInfo.new(3,Enum.EasingStyle.Linear),{Range = 0}):Play()
-   tweenservice:Create(sound,TweenInfo.new(5,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
-   task.wait(3)
-   s:Destroy()
-   color:Destroy()
-   blur:Destroy()
-end)
-
 task.wait(5)
 tweenservice:Create(sound,TweenInfo.new(15,Enum.EasingStyle.Linear),{PlaybackSpeed = 0.5}):Play()
 task.spawn(function()
@@ -176,4 +160,20 @@ task.spawn(function()
                             break end
           end
     end
+end)
+
+game.Workspace.CurrentRooms.ChildAdded:Connect(function()
+   dmg = false
+   tweenservice:Create(color, TweenInfo.new(3), {
+    Contrast = 0,
+    Brightness = 0,
+    TintColor = Color3.fromRGB(255, 255, 255)
+   }):Play()
+   tweenservice:Create(blur, TweenInfo.new(3), {Size = 0}):Play()
+   tweenservice:Create(light,TweenInfo.new(3,Enum.EasingStyle.Linear),{Range = 0}):Play()
+   tweenservice:Create(sound,TweenInfo.new(3,Enum.EasingStyle.Linear),{PlaybackSpeed = 0}):Play()
+   task.wait(3)
+   s:Destroy()
+   color:Destroy()
+   blur:Destroy()
 end)
