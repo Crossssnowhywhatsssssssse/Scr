@@ -1,0 +1,185 @@
+local TweenService = game:GetService("TweenService")
+local color = true
+local sound = Instance.new("Sound")
+sound.Name = "Thunder"
+sound.SoundId = "rbxassetid://8068501155"
+sound.Volume = 5
+sound.Parent = workspace
+
+local octave = Instance.new("PitchShiftSoundEffect",sound)
+octave.Octave = 0.5
+local level = Instance.new("DistortionSoundEffect",sound)
+level.Level = 0.75
+
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
+local entity = Spawner:Create({
+	Entity = {
+		Name = "The Lord",
+		Asset = "rbxassetid://131036299867520",
+		HeightOffset = 0
+	},
+	Lights = {
+		Flicker = {
+			Enabled = false,
+			Duration = 1
+		},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = true
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {80, 20, 0.1, 0.2}
+	},
+	Movement = {
+		Speed = 200,
+		Delay = 8,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 10,
+		Max = 15,
+		Delay = 0.2
+	},
+	Damage = {
+		Enabled = true,
+		IgnoreHiding = false,
+		Range = 100,
+		Amount = 999
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 999,
+		Resist = true,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"What is happening?", "It is not a normal entity.", "The one who will destroy all your existence.", "There is no way to cope.", "Accept the truth."},
+		Cause = "L-95"
+	}
+})
+
+sound:Play()
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+    task.spawn(function()
+         while color == true do wait(3)
+              TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(1),{TintColor = Color3.fromRGB(math.random(100, 255), 0, math.random(100, 255))}):Play()
+         end
+    end)
+    
+    task.spawn(function()
+         for i,v in pairs(entity.Model:GetDescendants()) do
+			if v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2" then
+				v.PlaybackSpeed = 0.2
+			end
+		  end
+    end)
+end)
+
+entity:SetCallback("OnStartMoving", function()
+    print("Entity has started moving")
+end)
+
+entity:SetCallback("OnRebounding", function(startOfRebound: boolean)
+    if startOfRebound == true then
+        print("Entity has started rebounding")
+	else
+        entity.Config.Movement.Speed += 100
+	end
+end)
+
+entity:SetCallback("OnDespawning", function()
+    color = false
+    sound:Destroy()
+    wait(4)
+    TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth: number)
+	if newHealth >= 0 then
+	    local TweenService = game:GetService("TweenService")
+		local shadow = game:GetObjects("rbxassetid://11503625408")[1]
+        local gui = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
+        shadow.Parent = gui
+        shadow.Visible = true
+
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://18564431123" 
+        sound.Parent = gui
+        sound.Volume = 0.5
+        sound:Play()
+
+        local octave = Instance.new("PitchShiftSoundEffect",sound)
+        octave.Octave = 0.5
+        local level = Instance.new("DistortionSoundEffect",sound)
+        level.Level = 0.97
+        local a = Instance.new("DistortionSoundEffect",sound)
+        a.Level = 0.75
+        local b = Instance.new("DistortionSoundEffect",sound)
+        b.Level = 0.75
+
+        local l__ImageLabel__1 = shadow.ImageLabel;
+        local v2 = Random.new();
+        local l__SizeValue__3 = shadow.SizeValue;
+        local v4 = math.random(1, 6);
+                if v4 == 1 then
+                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+                end;
+                if v4 == 2 then
+                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+                end;
+                if v4 == 3 then
+                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+                end;
+                if v4 == 4 then
+                    	l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+                end;
+                if v4 == 5 then
+                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+                end;
+                if v4 == 6 then
+                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
+        end;
+        shadow.Jumpscare:Play();
+        for v5 = 1, 25 do
+                local v6 = math.random(1, 25);
+                if v6 == 1 then
+                		TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(50, 0, 150)}):Play();
+                		l__ImageLabel__1.ImageColor3 = Color3.new(1, 1, 1);
+            	end;
+            	if v6 == 2 then
+                        TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play();
+                		l__ImageLabel__1.ImageColor3 = Color3.new(1, 1, 1);
+           	end;
+           	if v6 == 3 then
+                		TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play();
+                		l__ImageLabel__1.ImageColor3 = Color3.fromRGB(0, 0, 0);
+           	end;
+        		l__ImageLabel__1.Position = UDim2.new(v2:NextNumber(0.4, 0.6), 0, v2:NextNumber(0.45, 0.45), 0);
+        		l__ImageLabel__1.Size = l__ImageLabel__1.Size + UDim2.new(l__SizeValue__3.Value, 0, l__SizeValue__3.Value, 0);
+        		l__ImageLabel__1.Rotation = math.random(-50, 50);
+	        	l__SizeValue__3.Value = l__SizeValue__3.Value - 0.013;
+	        	wait(0);
+        end;
+
+		l__ImageLabel__1.ImageColor3 = Color3.new(0, 0, 0);
+		shadow.BackgroundColor3 = Color3.new(0, 0, 0);	
+		TweenService:Create(l__ImageLabel__1, TweenInfo.new(4), {ImageTransparency = 1}):Play();
+		TweenService:Create(shadow, TweenInfo.new(3), {BackgroundTransparency = 1}):Play();
+		wait(4);
+		gui:destroy()
+	end
+end)
+ 
+---====== Run entity ======---
+
+entity:Run(true)
