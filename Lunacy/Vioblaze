@@ -101,7 +101,7 @@ Amount = 125
 },
 Crucifixion = {
 Enabled = true,
-Range = 40,
+Range = 99999,
 Resist = false,
 Break = true
 },
