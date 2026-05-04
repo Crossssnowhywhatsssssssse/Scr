@@ -57,7 +57,7 @@ end
 -- script thuc the
 -------------------------------
 
-local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/DOORS-Entity-Spawner-V2/main/init.luau"))()
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
 
 local entity = Spawner:Create({
 Entity = {
