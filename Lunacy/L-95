@@ -1,15 +1,19 @@
 local TweenService = game:GetService("TweenService")
 local color = true
+
 local sound = Instance.new("Sound")
 sound.Name = "Thunder"
 sound.SoundId = "rbxassetid://8068501155"
 sound.Volume = 5
 sound.Parent = workspace
 
-local octave = Instance.new("PitchShiftSoundEffect",sound)
+local octave = Instance.new("PitchShiftSoundEffect")
 octave.Octave = 0.5
-local level = Instance.new("DistortionSoundEffect",sound)
+octave.Parent = sound
+
+local level = Instance.new("DistortionSoundEffect")
 level.Level = 0.75
+level.Parent = sound
 
 local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
 local entity = Spawner:Create({
@@ -19,31 +23,26 @@ local entity = Spawner:Create({
 		HeightOffset = 0
 	},
 	Lights = {
-		Flicker = {
-			Enabled = false,
-			Duration = 1
-		},
+		Flicker = { Enabled = false, Duration = 1 },
 		Shatter = true,
 		Repair = false
 	},
-	Earthquake = {
-		Enabled = true
-	},
+	Earthquake = { Enabled = true },
 	CameraShake = {
 		Enabled = true,
 		Range = 100,
-		Values = {80, 20, 0.1, 0.2}
+		Values = {50, 10, 0.1, 0.2}
 	},
 	Movement = {
-		Speed = 200,
+		Speed = 500,
 		Delay = 8,
 		Reversed = false
 	},
 	Rebounding = {
 		Enabled = true,
 		Type = "Ambush",
-		Min = 10,
-		Max = 15,
+		Min = 8,
+		Max = 10,
 		Delay = 0.2
 	},
 	Damage = {
@@ -60,53 +59,68 @@ local entity = Spawner:Create({
 	},
 	Death = {
 		Type = "Guiding",
-		Hints = {"What is happening?", "It is not a normal entity.", "The one who will destroy all your existence.", "There is no way to cope.", "Accept the truth."},
+		Hints = {
+			"What is happening?",
+			"It is not a normal entity.",
+			"The one who will destroy all your existence.",
+			"There is no way to cope.",
+			"Accept the truth."
+		},
 		Cause = "L-95"
 	}
 })
 
 sound:Play()
 
----====== Debug entity ======---
-
 entity:SetCallback("OnSpawned", function()
-    task.spawn(function()
-         while color == true do wait(3)
-              TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(1),{TintColor = Color3.fromRGB(math.random(100, 255), 0, math.random(100, 255))}):Play()
-         end
-    end)
-    
-    task.spawn(function()
-         for i,v in pairs(entity.Model:GetDescendants()) do
-			if v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2" then
+	task.spawn(function()
+		while color do
+			task.wait(3)
+			local cc = game.Lighting:FindFirstChild("MainColorCorrection")
+			if cc then
+				TweenService:Create(
+					cc,
+					TweenInfo.new(1),
+					{TintColor = Color3.fromRGB(math.random(100,255), 0, math.random(100,255))}
+				):Play()
+			end
+		end
+	end)
+
+	task.spawn(function()
+		for _,v in ipairs(entity.Model:GetDescendants()) do
+			if v:IsA("Sound") and (v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2") then
 				v.PlaybackSpeed = 0.2
 			end
-		  end
-    end)
+		end
+	end)
 end)
 
-entity:SetCallback("OnStartMoving", function()
-    print("Entity has started moving")
-end)
-
-entity:SetCallback("OnRebounding", function(startOfRebound: boolean)
-    if startOfRebound == true then
-        print("Entity has started rebounding")
-	else
-        entity.Config.Movement.Speed += 100
+entity:SetCallback("OnRebounding", function(startOfRebound)
+	if not startOfRebound then
+		entity.Config.Movement.Speed += 300
 	end
 end)
 
 entity:SetCallback("OnDespawning", function()
-    color = false
-    sound:Destroy()
-    wait(4)
-    TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)}):Play()
+	color = false
+	if sound then sound:Destroy() end
+
+	task.wait(4)
+
+	local cc = game.Lighting:FindFirstChild("MainColorCorrection")
+	if cc then
+		TweenService:Create(
+			cc,
+			TweenInfo.new(5),
+			{TintColor = Color3.fromRGB(255,255,255)}
+		):Play()
+	end
 end)
 
-entity:SetCallback("OnDamagePlayer", function(newHealth: number)
-	if newHealth >= 0 then
-	    local TweenService = game:GetService("TweenService")
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth > 0 then
+		local TweenService = game:GetService("TweenService")
 		local shadow = game:GetObjects("rbxassetid://11503625408")[1]
         local gui = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
         shadow.Parent = gui
@@ -179,7 +193,5 @@ entity:SetCallback("OnDamagePlayer", function(newHealth: number)
 		gui:destroy()
 	end
 end)
- 
----====== Run entity ======---
 
 entity:Run(true)
