@@ -1,0 +1,72 @@
+--// Local Script
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+local entity = spawner.Create({
+	Entity = {
+		Name = "Obess",
+		Asset = "rbxassetid://134303020544684",
+		HeightOffset = 5
+	},
+	Lights = {
+		Flicker = {Enabled = false, Duration = 20},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {2.5, 20, 0.1, 1}
+	},
+	Movement = {
+		Speed = 150,
+		Delay = 5,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 2,
+		Max = 3,
+		Delay = 0.5
+	},
+	Damage = {
+		Enabled = true,
+		Range = 50,
+		Amount = 200
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 50,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Cause = "Obsess"
+	}
+})
+--// Effect
+local color = Instance.new("ColorCorrectionEffect", game.Lighting)
+game.TweenService:Create(color, TweenInfo.new(20), {
+        TintColor = Color3.fromRGB(100, 0, 255),
+        Saturation = -0.7,
+        Contrast = 0.2
+}):Play()
+--// Sound Arrival
+local Sielnce = Instance.new("Sound", workspace)
+         Sielnce.SoundId = "rbxassetid://5302239245"
+         Sielnce:Play()
+         Sielnce.Volume = 3
+         game.Debris:AddItem(Sielnce, 10)
+--// Despawn
+entity:SetCallback("OnDespawning", function()
+	game.TweenService:Create(color, TweenInfo.new(10), {
+        TintColor = Color3.fromRGB(255, 255, 255),
+        Saturation = 0,
+        Contrast = 0
+}):Play()
+game.Debris:AddItem(color, 10)
+end)
+--// Entity Spawn
+entity:Run()
