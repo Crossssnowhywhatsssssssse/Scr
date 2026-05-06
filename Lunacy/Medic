@@ -45,7 +45,7 @@ lv.Parent = part
 local face = att:FindFirstChild("Face")
 if face then
     face.Brightness = 0.1
-    face.Texture = "rbxassetid://111533053510042"
+    face.Texture = "rbxassetid://102040288269498"
     face.LightInfluence = 0.1
     face.LightEmission = 0.1
     face.Lifetime = NumberRange.new(0.1, 0.1)
