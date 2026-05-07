@@ -1,5 +1,5 @@
 --// Local Script
-local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/refs/heads/main/SpawnerFix", false))()
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt", false))()
 local entity = spawner.Create({
 	Entity = {
 		Name = "Obess",
