@@ -500,16 +500,6 @@ local function GetNodesFromRoom(room: Model, reversed: boolean): { BasePart }
 		end
 	end
 
-    -- BlockedDoor
-    for _, door in ipairs(room:GetDescendants()) do
-		if door.Name == "BlockedDoor" then
-			local n = door:Clone()
-			n.Name = tostring(#nodes + 1)
-			n.CFrame += Vector3.new(0, 2, 0)
-			nodes[#nodes + 1] = n
-		end
-	end
-
 	-- nodesFolder
 	local nodesFolder = room:FindFirstChild("nodesFolder") or room:FindFirstChild("PathfindNodes")
 	if nodesFolder then
