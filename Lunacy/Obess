@@ -1,13 +1,12 @@
---// Local Script
-local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt", false))()
-local entity = spawner.Create({
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
+local entity = Spawner:Create({
 	Entity = {
 		Name = "Obess",
 		Asset = "rbxassetid://134303020544684",
-		HeightOffset = 5
+		HeightOffset = 0
 	},
 	Lights = {
-		Flicker = {Enabled = false, Duration = 20},
+		Flicker = {Enabled = true, Duration = 20},
 		Shatter = true,
 		Repair = false
 	},
@@ -17,7 +16,7 @@ local entity = spawner.Create({
 	CameraShake = {
 		Enabled = true,
 		Range = 100,
-		Values = {2.5, 20, 0.1, 1}
+		Values = {3.5, 20, 0.1, 0.5}
 	},
 	Movement = {
 		Speed = 150,
@@ -33,40 +32,52 @@ local entity = spawner.Create({
 	},
 	Damage = {
 		Enabled = true,
-		Range = 50,
-		Amount = 200
+		IgnoreHiding = false,
+		Range = 70,
+		Amount = 0.01
 	},
 	Crucifixion = {
 		Enabled = true,
-		Range = 50,
+		Range = 40,
 		Resist = false,
 		Break = true
 	},
 	Death = {
-		Cause = "Obsess"
+		Type = "Guiding", -- "Curious"
+		Hints = {"Death", "Hints", "Go", "Here"},
+		Cause = ""
 	}
 })
---// Effect
+
 local color = Instance.new("ColorCorrectionEffect", game.Lighting)
 game.TweenService:Create(color, TweenInfo.new(20), {
         TintColor = Color3.fromRGB(100, 0, 255),
         Saturation = -0.7,
         Contrast = 0.2
 }):Play()
---// Sound Arrival
+
 local Sielnce = Instance.new("Sound", workspace)
          Sielnce.SoundId = "rbxassetid://5302239245"
          Sielnce:Play()
          Sielnce.Volume = 3
          game.Debris:AddItem(Sielnce, 10)
---// Despawn
+         
 entity:SetCallback("OnDespawning", function()
-	game.TweenService:Create(color, TweenInfo.new(10), {
+    game.TweenService:Create(color, TweenInfo.new(10), {
         TintColor = Color3.fromRGB(255, 255, 255),
         Saturation = 0,
         Contrast = 0
-}):Play()
-game.Debris:AddItem(color, 10)
+    }):Play()
+    game.Debris:AddItem(color, 10)
 end)
---// Entity Spawn
-entity:Run()
+
+entity:SetCallback("OnDamagePlayer", function(newHealth: number)
+	if not newHealth ~= 0 then
+		game.Players.LocalPlayer.Character.Humanoid.Health = 0
+		game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Obess"
+		local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
+        require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
+	end
+end)
+
+entity:Run(true)
