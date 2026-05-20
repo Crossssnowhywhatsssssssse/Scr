@@ -104,10 +104,11 @@ end)
 local startRoom = LatestRoom.Value
 
 LatestRoom.Changed:Connect(function()
-	if LatestRoom.Value >= startRoom + 5 then
+	if LatestRoom.Value >= startRoom + 8 then
 		alive = false
 		if smile then
 			smile:Destroy()
+			getgenv().MiniBoss = false
 		end
 	end
 end)
