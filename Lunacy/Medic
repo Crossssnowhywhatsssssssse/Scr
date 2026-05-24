@@ -14,7 +14,7 @@ local Distance = 10
 local CheckUnder = 10
 local HeightOffset = 6
 local Direction = Vector3.new(1,0,0)
-local Amount = 0.75
+local Amount = 1
 local Interval = 0.25
 local Range = 20
 
@@ -143,8 +143,8 @@ task.spawn(function()
 		if hum and hrp and hum.Health > 0 then
 			local distance = (hrp.Position - part.Position).Magnitude
 			if distance <= Range then
-				if hum.Health < 70 then
-					hum.Health = math.min(hum.Health + Amount, 70)
+				if hum.Health < 100 then
+					hum.Health = math.min(hum.Health + Amount, 100)
 				end
 			end
 		end
