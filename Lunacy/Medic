@@ -61,7 +61,7 @@ end
 local Bubble = att:FindFirstChild("Bubble")
 if Bubble then
     Bubble.Lifetime = NumberRange.new(1, 5)
-    Bubble.Brightness = 0.3
+    Bubble.Brightness = 0.5
     Bubble.Orientation = Enum.ParticleOrientation.FacingCamera
     Bubble.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
@@ -134,21 +134,44 @@ connect = RunService.Heartbeat:Connect(function()
     )
 end)
 
--- Heal
+-- Heal / Damage
 task.spawn(function()
-	while dmg do
-		task.wait(Interval)
-		if not part or not part.Parent then break end
+    while dmg do
+        task.wait(Interval)
 
-		if hum and hrp and hum.Health > 0 then
-			local distance = (hrp.Position - part.Position).Magnitude
-			if distance <= Range then
-				if hum.Health < 100 then
-					hum.Health = math.min(hum.Health + Amount, 100)
-				end
-			end
-		end
-	end
+        if not part or not part.Parent then
+            break
+        end
+
+        chr = plr.Character
+        if not chr then
+            continue
+        end
+
+        hum = chr:FindFirstChild("Humanoid")
+        hrp = chr:FindFirstChild("HumanoidRootPart")
+
+        if hum and hrp and hum.Health > 0 then
+            local distance = (hrp.Position - part.Position).Magnitude
+
+            if distance <= Range then
+
+                local Crucifix = chr:FindFirstChild("Crucifix")
+
+                if Crucifix and Crucifix:IsA("Tool") then
+                    hum.Health = math.max(hum.Health - 10,0)
+                    game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Medic"
+                    
+                else
+                    hum.Health = math.min(
+                        hum.Health + Amount,
+                        hum.MaxHealth
+                    )
+                end
+
+            end
+        end
+    end
 end)
 
 ---====== Despawn ======---
