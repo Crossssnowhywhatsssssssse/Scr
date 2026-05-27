@@ -57,13 +57,13 @@ end
 -- script thuc the
 -------------------------------
 
-local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
+local Spawner = loadstring(game:HttpGet("https://pastefy.app/18awUtXf/raw"))()
 
 local entity = Spawner:Create({
 Entity = {
 Name = "Vioblade",
 Asset = "https://github.com/Whatttt23/Scr/raw/main/vioblaze%20tlr.rbxm",
-HeightOffset = 0
+HeightOffset = 4
 },
 Lights = {
 Flicker = {
