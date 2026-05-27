@@ -63,7 +63,7 @@ local entity = Spawner:Create({
 Entity = {
 Name = "Vioblade",
 Asset = "https://github.com/Whatttt23/Scr/raw/main/vioblaze%20tlr.rbxm",
-HeightOffset = 4
+HeightOffset = 3
 },
 Lights = {
 Flicker = {
@@ -169,10 +169,10 @@ task.spawn(function()
                 end  
             end)  
               
-            game:GetService("Debris"):AddItem(fireNode, 10)  
+            game:GetService("Debris"):AddItem(fireNode, 8)  
         end  
           
-        task.wait(0.02)  
+        task.wait(0.01)  
     end  
 end)
 end)
