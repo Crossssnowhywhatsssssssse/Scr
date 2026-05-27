@@ -1,13 +1,7 @@
 local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
-
 local color = true
-
-local baseCC = Lighting:FindFirstChild("MainColorCorrection")
-if not baseCC then return end
-
-local clone = baseCC:Clone()
-clone.Parent = Lighting
+local clone = game.Lighting:FindFirstChild("MainColorCorrection"):Clone()
+clone.Parent = game.Lighting
 
 local sound = Instance.new("Sound")
 sound.Name = "Thunder"
@@ -15,147 +9,119 @@ sound.SoundId = "rbxassetid://8068501155"
 sound.Volume = 5
 sound.Parent = workspace
 
-Instance.new("PitchShiftSoundEffect", sound).Octave = 0.5
-Instance.new("DistortionSoundEffect", sound).Level = 0.75
+local octave = Instance.new("PitchShiftSoundEffect")
+octave.Octave = 0.5
+octave.Parent = sound
 
-local Spawner =
-loadstring(game:HttpGet(
-"https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"
-))()
+local level = Instance.new("DistortionSoundEffect")
+level.Level = 0.75
+level.Parent = sound
 
+local Spawner = loadstring(game:HttpGet("https://pastefy.app/18awUtXf/raw"))()
 local entity = Spawner:Create({
 	Entity = {
 		Name = "The Lord",
 		Asset = "rbxassetid://131036299867520",
 		HeightOffset = 0
 	},
-
 	Lights = {
-		Flicker = {Enabled=false},
-		Shatter=true,
-		Repair=false
+		Flicker = { Enabled = false, Duration = 1 },
+		Shatter = true,
+		Repair = false
 	},
-
-	Earthquake = {
-		Enabled=true
-	},
-
+	Earthquake = { Enabled = true },
 	CameraShake = {
-		Enabled=true,
-		Range=100,
-		Values={10,10,0.1,0.2}
+		Enabled = true,
+		Range = 100,
+		Values = {30, 10, 0.1, 0.2}
 	},
-
 	Movement = {
-		Speed=700,
-		Delay=8,
-		Reversed=false
+		Speed = 675,
+		Delay = 8,
+		Reversed = false
 	},
-
 	Rebounding = {
-		Enabled=true,
-		Type="Ambush",
-		Min=8,
-		Max=10,
-		Delay=0.2
+		Enabled = true,
+		Type = "Ambush",
+		Min = 8,
+		Max = 10,
+		Delay = 0.2
 	},
-
 	Damage = {
-		Enabled=true,
-		Range=100,
-		Amount=999
+		Enabled = true,
+		IgnoreHiding = false,
+		Range = 100,
+		Amount = 999
 	},
-
 	Crucifixion = {
-		Enabled=true,
-		Range=999,
-		Resist=true,
-		Break=true
+		Enabled = true,
+		Range = 999,
+		Resist = true,
+		Break = true
 	},
-
 	Death = {
-		Type="Guiding",
-		Hints={"."},
-		Cause="L-95"
+		Type = "Guiding",
+		Hints = {
+			"What is happening?",
+			"It is not a normal entity.",
+			"The one who will destroy all your existence.",
+			"There is no way to cope.",
+			"Accept the truth."
+		},
+		Cause = "L-95"
 	}
 })
 
 sound:Play()
 
-entity:SetCallback("OnSpawned",function()
+entity:SetCallback("OnSpawned", function()
 	repeat task.wait() until entity.Model
 
 	task.spawn(function()
-		while color and clone.Parent do
+		while color do
 			task.wait(3)
-
-			TweenService:Create(
-				clone,
-				TweenInfo.new(1),
-				{
-					TintColor =
-					Color3.fromRGB(
-						math.random(100,255),
-						0,
-						math.random(100,255)
-					)
-				}
-			):Play()
-		end
-	end)
-
-	entity.Model.DescendantAdded:Connect(function(v)
-		if v:IsA("Sound") then
-			if v.Name=="Glitching Sound Effect 4"
-			or v.Name=="scary_scream_glitch_V2"
-			then
-				v.PlaybackSpeed=0.2
+			local cc = clone
+			if cc then
+				TweenService:Create(
+					cc,
+					TweenInfo.new(1),
+					{TintColor = Color3.fromRGB(math.random(100,255), 0, math.random(100,255))}
+				):Play()
 			end
 		end
 	end)
 
-	for _,v in ipairs(entity.Model:GetDescendants()) do
-		if v:IsA("Sound") then
-			if v.Name=="Glitching Sound Effect 4"
-			or v.Name=="scary_scream_glitch_V2"
-			then
-				v.PlaybackSpeed=0.2
+	task.spawn(function()
+		for _,v in ipairs(entity.Model:GetDescendants()) do
+			if v:IsA("Sound") and (v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2") then
+				v.PlaybackSpeed = 0.2
 			end
 		end
-	end
+	end)
 end)
 
-entity:SetCallback("OnDespawning",function()
-	color=false
+entity:SetCallback("OnDespawning", function()
+	color = false
+	if sound then sound:Destroy() end
 
-	if sound then
-		sound:Destroy()
-	end
+	task.wait(4)
 
 	local cc = clone
 	if cc then
-		local tween = TweenService:Create(
+		TweenService:Create(
 			cc,
-			TweenInfo.new(5, Enum.EasingStyle.Linear),
-			{
-				TintColor = Color3.fromRGB(255,255,255),
-				Brightness = 0,
-				Contrast = 0,
-				Saturation = 0
-			}
-		)
-
-		tween:Play()
-		tween.Completed:Wait()
-		cc:Destroy()
+			TweenInfo.new(5),
+			{TintColor = Color3.fromRGB(255,255,255)}
+		):Play()
 	end
+	
+	task.wait(5)
+	cc:Destroy()
 end)
 
-entity:SetCallback("OnDamagePlayer",function(newHealth)
-	if newHealth<=0 then
-		loadstring(game:HttpGet(
-			"https://pastefy.app/xclq6IqV/raw"
-		))()
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 or newHealth < 0 then
+		loadstring(game:HttpGet("https://pastefy.app/xclq6IqV/raw"))()
 	end
 end)
 
