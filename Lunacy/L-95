@@ -18,7 +18,7 @@ level.Level = 0.75
 level.Parent = sound
 
 local Spawner = loadstring(game:HttpGet("https://pastefy.app/18awUtXf/raw"))()
-local entity = Spawner:Create({
+local g95 = Spawner:Create({
 	Entity = {
 		Name = "The Lord",
 		Asset = "rbxassetid://131036299867520",
@@ -62,11 +62,10 @@ local entity = Spawner:Create({
 	Death = {
 		Type = "Guiding",
 		Hints = {
-			"What is happening?",
-			"It is not a normal entity.",
-			"The one who will destroy all your existence.",
-			"There is no way to cope.",
-			"Accept the truth."
+			"...",
+			"...",
+			"...",
+			"...",
 		},
 		Cause = "L-95"
 	}
@@ -74,8 +73,8 @@ local entity = Spawner:Create({
 
 sound:Play()
 
-entity:SetCallback("OnSpawned", function()
-	repeat task.wait() until entity.Model
+g95:SetCallback("OnSpawned", function()
+	repeat task.wait() until g95.Model
 
 	task.spawn(function()
 		while color do
@@ -92,7 +91,7 @@ entity:SetCallback("OnSpawned", function()
 	end)
 
 	task.spawn(function()
-		for _,v in ipairs(entity.Model:GetDescendants()) do
+		for _,v in ipairs(g95.Model:GetDescendants()) do
 			if v:IsA("Sound") and (v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2") then
 				v.PlaybackSpeed = 0.2
 			end
@@ -100,7 +99,7 @@ entity:SetCallback("OnSpawned", function()
 	end)
 end)
 
-entity:SetCallback("OnDespawning", function()
+g95:SetCallback("OnDespawning", function()
 	color = false
 	if sound then sound:Destroy() end
 
@@ -119,10 +118,10 @@ entity:SetCallback("OnDespawning", function()
 	cc:Destroy()
 end)
 
-entity:SetCallback("OnDamagePlayer", function(newHealth)
+g95:SetCallback("OnDamagePlayer", function(newHealth)
 	if newHealth == 0 or newHealth < 0 then
 		loadstring(game:HttpGet("https://pastefy.app/xclq6IqV/raw"))()
 	end
 end)
 
-entity:Run(true)
+g95:Run(true)
