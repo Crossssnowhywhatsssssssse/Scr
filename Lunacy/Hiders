@@ -16,7 +16,7 @@ local AssetIds = {
 	"rbxassetid://11205614607",
 }
 
-local SpawnCount = 3
+local SpawnCount = 5
 local SpawnDelay = 0.05
 local ExtraHeight = 0.1
 
@@ -40,53 +40,27 @@ local RiseSoundId = "rbxassetid://89025651075607"
 local RiseSoundVolume = 1.5
 local RiseSoundPlaybackSpeed = 1
 
-local DescendDelay = 3
-local DescendTime = 3
+local MinDistanceBetween = 25
 
-local StartDelay = 5
-local StandStillTime = 2
-local WanderTime = 30
-local MoveSpeed = 20
-local FollowRadiusMin = 18
-local FollowRadiusMax = 45
-
---// Entities
-local Entities = {
-	{
-		ModelId = "rbxassetid://87057691012083",
-		SpawnDelay = 0,
-		SpawnSoundId = "rbxassetid://119587710261474",
-		DespawnSoundId = "rbxassetid://112931849449811"
-	},
-	{
-		ModelId = "rbxassetid://87057691012083",
-		SpawnDelay = 1.2,
-		SpawnSoundId = "rbxassetid://119587710261474",
-		DespawnSoundId = "rbxassetid://112931849449811"
-	},
-	{
-		ModelId = "rbxassetid://87057691012083",
-		SpawnDelay = 2.5,
-		SpawnSoundId = "rbxassetid://119587710261474",
-		DespawnSoundId = "rbxassetid://112931849449811"
-	}
-}
-
+--// Storage
 local SpawnedClosets = {}
-local AliveEntities = #Entities
+local UsedPositions = {}
 
 --// Utils
 local function GetCurrentRoom()
+
 	local gd = ReplicatedStorage:FindFirstChild("GameData")
 	if not gd then return end
 
 	local lr = gd:FindFirstChild("LatestRoom")
 	if not lr then return end
 
-	return workspace.CurrentRooms:FindFirstChild(tostring(lr.Value))
+	return workspace.CurrentRooms:FindFirstChild(
+		tostring(lr.Value)
+	)
 end
 
-local function CameraShake(duration, intensity)
+local function CameraShake(duration,intensity)
 
 	local start = tick()
 
@@ -180,6 +154,7 @@ local function GetRandomFloorCFrame(room)
 	for _,v in ipairs(room:GetDescendants()) do
 		if v:IsA("BasePart")
 		and v.Name == "Floor" then
+
 			table.insert(floors,v)
 		end
 	end
@@ -188,64 +163,37 @@ local function GetRandomFloorCFrame(room)
 		return
 	end
 
-	local floor = floors[math.random(#floors)]
-	local size = floor.Size
+	for _ = 1,50 do
 
-	return floor.CFrame * CFrame.new(
-		(math.random()-0.5)*size.X,
-		0,
-		(math.random()-0.5)*size.Z
-	)
-end
+		local floor = floors[math.random(#floors)]
+		local size = floor.Size
 
-local function MoveModelTween(model,anchor,targetCF)
+		local cf = floor.CFrame * CFrame.new(
+			(math.random()-0.5)*size.X,
+			0,
+			(math.random()-0.5)*size.Z
+		)
 
-	if not model
-	or not model.Parent
-	or not anchor then
-		return 0
+		local pos = cf.Position
+		local valid = true
+
+		for _,oldPos in ipairs(UsedPositions) do
+
+			if (oldPos - pos).Magnitude < MinDistanceBetween then
+				valid = false
+				break
+			end
+		end
+
+		if valid then
+			table.insert(UsedPositions,pos)
+			return cf
+		end
 	end
 
-	local offset =
-		anchor.CFrame:Inverse()
-		* model:GetPivot()
+	local fallback = floors[math.random(#floors)]
 
-	local startCF = model:GetPivot()
-	local endCF = targetCF * offset
-
-	local dist =
-		(startCF.Position-endCF.Position).Magnitude
-
-	local time = math.max(dist/MoveSpeed,0.05)
-
-	local cf = Instance.new("CFrameValue")
-	cf.Value = startCF
-
-	local conn
-	conn = cf:GetPropertyChangedSignal("Value"):Connect(function()
-
-		if model and model.Parent then
-			model:PivotTo(cf.Value)
-		else
-			conn:Disconnect()
-		end
-	end)
-
-	local tween = TweenService:Create(
-		cf,
-		TweenInfo.new(time,Enum.EasingStyle.Linear),
-		{Value = endCF}
-	)
-
-	tween:Play()
-
-	tween.Completed:Once(function()
-
-		conn:Disconnect()
-		cf:Destroy()
-	end)
-
-	return time
+	return fallback.CFrame
 end
 
 --// Room Effects
@@ -316,7 +264,7 @@ local function ChangeNeonInOpenedRooms()
 	end
 end
 
---// Spawn Closet
+--// Spawn Object
 local function SpawnRandomObject()
 
 	local room = GetCurrentRoom()
@@ -335,6 +283,7 @@ local function SpawnRandomObject()
 	model.Parent = room
 
 	for _,v in ipairs(model:GetDescendants()) do
+
 		if v:IsA("BasePart") then
 			v.CanCollide = false
 		end
@@ -347,7 +296,9 @@ local function SpawnRandomObject()
 		return
 	end
 
-	if not model.PrimaryPart then
+	if model:IsA("Model")
+	and not model.PrimaryPart then
+
 		model.PrimaryPart = anchor
 	end
 
@@ -363,12 +314,20 @@ local function SpawnRandomObject()
 
 	local startCF =
 		baseCF
-		* CFrame.new(0,-(size.Y/2 + RiseDepth),0)
+		* CFrame.new(
+			0,
+			-(size.Y/2 + RiseDepth),
+			0
+		)
 		* rot
 
 	local endCF =
 		baseCF
-		* CFrame.new(0,(size.Y/2 + ExtraHeight),0)
+		* CFrame.new(
+			0,
+			(size.Y/2 + ExtraHeight),
+			0
+		)
 		* rot
 
 	model:PivotTo(startCF)
@@ -385,24 +344,34 @@ local function SpawnRandomObject()
 	local tween = TweenService:Create(
 		alpha,
 		TweenInfo.new(
-			math.random()*(MaxRiseTime-MinRiseTime)+MinRiseTime,
+			math.random() *
+			(MaxRiseTime-MinRiseTime)
+			+ MinRiseTime,
+
 			Enum.EasingStyle.Quint,
 			Enum.EasingDirection.Out
 		),
-		{Value = 1}
+		{
+			Value = 1
+		}
 	)
 
 	local conn
 	conn = RunService.RenderStepped:Connect(function()
 
 		if not model.Parent then
+
 			conn:Disconnect()
 			alpha:Destroy()
+
 			return
 		end
 
 		model:PivotTo(
-			startCF:Lerp(endCF,alpha.Value)
+			startCF:Lerp(
+				endCF,
+				alpha.Value
+			)
 		)
 	end)
 
@@ -416,409 +385,17 @@ local function SpawnRandomObject()
 
 	AddLight(model)
 
-	table.insert(SpawnedClosets,model)
-end
-
---// Descend
-local function DescendCloset(model)
-
-	if not model
-	or not model.Parent then
-		return
-	end
-
-	local anchor = GetAnchorPart(model)
-	if not anchor then return end
-
-	local startCF = model:GetPivot()
-
-	local _,size = model:GetBoundingBox()
-
-	local endCF =
-		startCF * CFrame.new(
-			0,
-			-(size.Y + 0.5),
-			0
-		)
-
-	local sound = Instance.new("Sound")
-	sound.SoundId = RiseSoundId
-	sound.Volume = RiseSoundVolume
-	sound.PlaybackSpeed = RiseSoundPlaybackSpeed
-	sound.Parent = anchor
-	sound:Play()
-
-	CameraShake(DescendTime,ShakeIntensity)
-
-	local alpha = Instance.new("NumberValue")
-
-	local tween = TweenService:Create(
-		alpha,
-		TweenInfo.new(
-			DescendTime,
-			Enum.EasingStyle.Quint,
-			Enum.EasingDirection.In
-		),
-		{Value = 1}
+	table.insert(
+		SpawnedClosets,
+		model
 	)
-
-	local conn
-	conn = RunService.RenderStepped:Connect(function()
-
-		if not model.Parent then
-			conn:Disconnect()
-			alpha:Destroy()
-			return
-		end
-
-		model:PivotTo(
-			startCF:Lerp(endCF,alpha.Value)
-		)
-	end)
-
-	tween.Completed:Once(function()
-
-		conn:Disconnect()
-		alpha:Destroy()
-
-		if sound then
-			sound:Destroy()
-		end
-	end)
-
-	tween:Play()
-end
-
---// Kill
-_G.OnEntityKill = function(entity,player)
-
-	local char =
-		LocalPlayer.Character
-		or LocalPlayer.CharacterAdded:Wait()
-
-	local hum =
-		char:FindFirstChildOfClass("Humanoid")
-
-	local hrp =
-		char:FindFirstChild("HumanoidRootPart")
-
-	if hum then
-		hum:TakeDamage(5)
-	end
-
-	local cue2 = Instance.new("Sound")
-	cue2.Parent = workspace
-	cue2.Name = "Attacked"
-	cue2.SoundId = "rbxassetid://7171761940"
-	cue2.Volume = 2
-	cue2:Play()
-
-	if hum then
-
-		local animation = Instance.new("Animation")
-		animation.AnimationId = "rbxassetid://18759987341"
-
-		local fallen = hum:LoadAnimation(animation)
-
-		fallen:Play()
-		fallen.TimePosition = 1
-	end
-
-	if hrp then
-
-		local distance = 6
-		local speed = 25
-
-		local time = distance/speed
-
-		local backDirection =
-			-hrp.CFrame.LookVector * distance
-
-		local targetCFrame =
-			hrp.CFrame + backDirection
-
-		local tween = TweenService:Create(
-			hrp,
-			TweenInfo.new(
-				time,
-				Enum.EasingStyle.Linear
-			),
-			{
-				CFrame = targetCFrame
-			}
-		)
-
-		tween:Play()
-	end
-
-	pcall(function()
-
-		firesignal(
-			ReplicatedStorage.RemotesFolder
-			.DeathHint.OnClientEvent,
-			{
-				"It seems like you just died to The Hiders",
-				"They are smart enough to kill 3 people at the same time.",
-				"Remember to not let them catch you"
-			},
-			"Blue"
-		)
-	end)
-
-	pcall(function()
-
-		ReplicatedStorage
-		.GameStats["Player_"..LocalPlayer.Name]
-		.Total.DeathCause.Value = "The Hiders"
-	end)
-
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "Damaged"
-	gui.IgnoreGuiInset = true
-	gui.ResetOnSpawn = false
-	gui.Parent = LocalPlayer.PlayerGui
-
-	local red = Instance.new("ImageLabel")
-	red.Name = "Getdamaged"
-	red.Size = UDim2.new(1,0,1,0)
-	red.BackgroundTransparency = 1
-	red.Image = "rbxassetid://74409649836736"
-	red.Parent = gui
-
-	task.delay(0.4,function()
-
-		local tw = TweenService:Create(
-			red,
-			TweenInfo.new(1),
-			{
-				ImageTransparency = 1
-			}
-		)
-
-		tw:Play()
-
-		tw.Completed:Once(function()
-
-			if gui then
-				gui:Destroy()
-			end
-		end)
-	end)
-end
-
---// Touch
-local function SetupKillTouch(model)
-
-	for _,p in ipairs(model:GetDescendants()) do
-
-		if p:IsA("BasePart") then
-
-			p.CanTouch = true
-
-			p.Touched:Connect(function(hit)
-
-				local char =
-					hit:FindFirstAncestorOfClass("Model")
-
-				if char == LocalPlayer.Character then
-
-					if _G.OnEntityKill then
-						_G.OnEntityKill(model,LocalPlayer)
-					end
-				end
-			end)
-		end
-	end
-end
-
---// Wander
-local function GetWanderPositionNearPlayer(room)
-
-	local char = LocalPlayer.Character
-	local hrp =
-		char and char:FindFirstChild(
-			"HumanoidRootPart"
-		)
-
-	if not hrp then
-		return
-	end
-
-	for _ = 1,10 do
-
-		local angle =
-			math.random()*math.pi*2
-
-		local radius =
-			math.random(
-				FollowRadiusMin,
-				FollowRadiusMax
-			)
-
-		local offset = Vector3.new(
-			math.cos(angle)*radius,
-			0,
-			math.sin(angle)*radius
-		)
-
-		local pos = hrp.Position + offset
-
-		local params = RaycastParams.new()
-
-		params.FilterDescendantsInstances = {char}
-		params.FilterType = Enum.RaycastFilterType.Exclude
-
-		local ray = workspace:Raycast(
-			pos + Vector3.new(0,10,0),
-			Vector3.new(0,-30,0),
-			params
-		)
-
-		if ray
-		and ray.Instance
-		and ray.Instance.Name == "Floor" then
-
-			return ray.Position + Vector3.new(0,3,0)
-		end
-	end
-end
-
-local function StartWander(model,anchor,room)
-
-	local running = true
-
-	task.spawn(function()
-
-		while running
-		and model
-		and model.Parent do
-
-			local pos =
-				GetWanderPositionNearPlayer(room)
-
-			if pos then
-
-				local t = MoveModelTween(
-					model,
-					anchor,
-					CFrame.new(pos)
-				)
-
-				task.wait(t)
-
-			else
-				task.wait(0.2)
-			end
-		end
-	end)
-
-	return function()
-		running = false
-	end
-end
-
---// Spawn Entity
-local function SpawnEntity(cfg,closet,room)
-
-	if not closet
-	or not room then
-		return
-	end
-
-	local objs =
-		game:GetObjects(cfg.ModelId)
-
-	if not objs
-	or not objs[1] then
-		return
-	end
-
-	local model = objs[1]
-	model.Parent = room
-
-	for _,v in ipairs(model:GetDescendants()) do
-		if v:IsA("BasePart") then
-			v.CanCollide = false
-		end
-	end
-
-	local anchor = GetAnchorPart(model)
-
-	if not anchor then
-		model:Destroy()
-		return
-	end
-
-	local cPart =
-		closet:FindFirstChildWhichIsA(
-			"BasePart",
-			true
-		)
-
-	if not cPart then
-		model:Destroy()
-		return
-	end
-
-	model:PivotTo(
-		cPart.CFrame * CFrame.new(0,0,-2)
-	)
-
-	PlaySound(anchor,cfg.SpawnSoundId)
-
-	SetupKillTouch(model)
-
-	task.wait(StandStillTime)
-
-	local stop =
-		StartWander(model,anchor,room)
-
-	task.wait(WanderTime)
-
-	stop()
-
-	local t = MoveModelTween(
-		model,
-		anchor,
-		cPart.CFrame * CFrame.new(0,0,-2)
-	)
-
-	task.wait(t)
-
-	PlaySound(anchor,cfg.DespawnSoundId)
-
-	task.wait(0.3)
-
-	AliveEntities -= 1
-
-	if AliveEntities <= 0 then
-
-		if _G.OnAllEntitiesDespawned then
-			_G.OnAllEntitiesDespawned()
-		end
-	end
-
-	model:Destroy()
-end
-
---// All Despawned
-_G.OnAllEntitiesDespawned = function()
-
-	task.delay(DescendDelay,function()
-
-		for _,closet in ipairs(_G.Closets or {}) do
-
-			if closet
-			and closet.Parent then
-
-				DescendCloset(closet)
-			end
-		end
-	end)
 end
 
 --// Start
-CameraShake(ShakeDuration,ShakeIntensity)
+CameraShake(
+	ShakeDuration,
+	ShakeIntensity
+)
 
 ChangeNeonInOpenedRooms()
 BreakLightsInOpenedRooms()
@@ -830,34 +407,4 @@ for i = 1,SpawnCount do
 	task.wait(SpawnDelay)
 end
 
-task.delay(0.5,function()
-	_G.Closets = SpawnedClosets
-end)
-
-task.spawn(function()
-
-	task.wait(StartDelay)
-
-	if not _G.Closets
-	or #_G.Closets < 3 then
-		return
-	end
-
-	local room = GetCurrentRoom()
-
-	if not room then
-		return
-	end
-
-	for i,cfg in ipairs(Entities) do
-
-		task.delay(cfg.SpawnDelay,function()
-
-			SpawnEntity(
-				cfg,
-				_G.Closets[i],
-				room
-			)
-		end)
-	end
-end)
+_G.Closets = SpawnedClosets
