@@ -147,7 +147,7 @@ if not primary_part then Electricer:Destroy() return end
 
 Electricer.PrimaryPart = primary_part
 Electricer:SetPrimaryPartCFrame(chr.HumanoidRootPart.CFrame * CFrame.new(0, 0, -offsetgyat))
-Electricer.PrimaryPart.CanCollide = false
+Electricer.PrimaryPart.CanCollide = true
 
 eAttachOrigin.Parent = primary_part
 beamL.Parent = Electricer
