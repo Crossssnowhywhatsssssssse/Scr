@@ -1,0 +1,448 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local model1Id = "rbxassetid://102795470660544"
+local model2Id = "rbxassetid://82116289847724"
+
+local jumpscareImageId = "rbxassetid://72338252989994"
+local jumpscareSoundId = "rbxassetid://3779045779"
+
+--// Spawn
+local function spawnInFront(assetId,distance,faceOffset,heightOffset)
+
+	local success,result = pcall(function()
+		return game:GetObjects(assetId)
+	end)
+
+	if not success
+	or not result
+	or not result[1] then
+		return
+	end
+
+	local obj = result[1]
+	obj.Parent = workspace
+
+	local char =
+		player.Character
+		or player.CharacterAdded:Wait()
+
+	local hrp =
+		char:WaitForChild("HumanoidRootPart")
+
+	local mainPart =
+		obj:FindFirstChildWhichIsA(
+			"BasePart",
+			true
+		)
+
+	if not mainPart then
+		obj:Destroy()
+		return
+	end
+
+	--// PrimaryPart
+	if obj:IsA("Model") then
+		obj.PrimaryPart = mainPart
+	end
+
+	--// No collision
+	for _,v in ipairs(obj:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.CanCollide = false
+			v.Anchored = true
+		end
+	end
+
+	local spawnCF =
+		hrp.CFrame
+		* CFrame.new(
+			0,
+			heightOffset,
+			-distance
+		)
+
+	--// Position model correctly
+	if obj:IsA("Model") then
+		obj:PivotTo(spawnCF)
+	else
+		mainPart.CFrame = spawnCF
+	end
+
+	--// Hitbox
+	local hitbox = Instance.new("Part")
+
+	hitbox.Name = "Hitbox"
+	hitbox.Size = Vector3.new(6,6,6)
+
+	hitbox.CFrame =
+		spawnCF
+		* CFrame.new(0,faceOffset,0)
+
+	hitbox.Anchored = true
+	hitbox.CanCollide = false
+	hitbox.Transparency = 1
+	hitbox.Parent = obj
+
+	return obj
+end
+
+--// Looking Check
+local function isLookingAt(obj)
+
+	if not obj
+	or not obj.Parent then
+		return false
+	end
+
+	local hitbox = obj:FindFirstChild("Hitbox")
+
+	if not hitbox then
+		return false
+	end
+
+	local viewportPoint,onScreen =
+		camera:WorldToViewportPoint(
+			hitbox.Position
+		)
+
+	if not onScreen then
+		return false
+	end
+
+	local screenCenter = Vector2.new(
+		camera.ViewportSize.X/2,
+		camera.ViewportSize.Y/2
+	)
+
+	local objectPos = Vector2.new(
+		viewportPoint.X,
+		viewportPoint.Y
+	)
+
+	local distance =
+		(screenCenter - objectPos).Magnitude
+
+	return distance < 150
+end
+
+--// Fade
+local function fadeOut(model,duration)
+
+	if not model
+	or not model.Parent then
+		return
+	end
+
+	local parts = {}
+
+	for _,v in ipairs(model:GetDescendants()) do
+		if v:IsA("BasePart") then
+			table.insert(parts,v)
+		end
+	end
+
+	local alpha = Instance.new("NumberValue")
+	alpha.Value = 0
+
+	local conn
+	conn = alpha:GetPropertyChangedSignal("Value"):Connect(function()
+
+		for _,p in ipairs(parts) do
+			if p and p.Parent then
+				p.Transparency = alpha.Value
+			end
+		end
+	end)
+
+	local tween = TweenService:Create(
+		alpha,
+		TweenInfo.new(duration),
+		{
+			Value = 1
+		}
+	)
+
+	tween:Play()
+
+	tween.Completed:Once(function()
+
+		conn:Disconnect()
+		alpha:Destroy()
+
+		if model and model.Parent then
+			model:Destroy()
+		end
+	end)
+end
+
+--// Jumpscare
+local function jumpscareSequence()
+
+	local gui = Instance.new("ScreenGui")
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Name = "JumpscareGui"
+	gui.Parent = player:WaitForChild("PlayerGui")
+
+	local blackOverlay = Instance.new("Frame")
+	blackOverlay.Size = UDim2.new(1,0,1,0)
+	blackOverlay.BackgroundColor3 = Color3.new(0,0,0)
+	blackOverlay.BorderSizePixel = 0
+	blackOverlay.ZIndex = 1
+	blackOverlay.Parent = gui
+
+	local filled = 0
+	local maxImages = 120
+
+	while filled < maxImages
+	and gui.Parent do
+
+		local img = Instance.new("ImageLabel")
+
+		img.BackgroundTransparency = 1
+		img.Image = jumpscareImageId
+		img.ZIndex = 2
+
+		local w = math.random(80,400)
+		local h = math.random(80,400)
+
+		img.Size = UDim2.new(0,w,0,h)
+
+		img.Position = UDim2.new(
+			math.random(),
+			-w/2,
+			math.random(),
+			-h/2
+		)
+
+		img.Rotation = math.random(0,360)
+
+		if math.random() > 0.5 then
+			img.ImageRectSize = Vector2.new(-100,100)
+		end
+
+		if math.random() > 0.5 then
+			img.ImageRectSize = Vector2.new(100,-100)
+		end
+
+		img.Parent = gui
+
+		local sound = Instance.new("Sound")
+		sound.SoundId = jumpscareSoundId
+		sound.Volume = 1
+		sound.Parent = gui
+		sound:Play()
+
+		game:GetService("Debris"):AddItem(sound,3)
+
+		filled += 1
+
+		task.wait(0.01)
+	end
+
+	local char = player.Character
+
+	if char then
+
+		local hum =
+			char:FindFirstChildOfClass(
+				"Humanoid"
+			)
+
+		if hum then
+
+			hum.Health = 0
+
+			pcall(function()
+
+				game.ReplicatedStorage
+				.GameStats[
+					"Player_"..player.Name
+				]
+				.Total.DeathCause.Value = "Stalker"
+			end)
+		end
+	end
+
+	local function clear()
+
+		if gui and gui.Parent then
+			gui:Destroy()
+		end
+	end
+
+	player.CharacterAdded:Connect(clear)
+
+	task.delay(0.2,clear)
+end
+
+--// Chase
+local function chasePlayer(monster,speed)
+
+	if not monster
+	or not monster.Parent then
+		return
+	end
+
+	local primary =
+		monster.PrimaryPart
+		or monster:FindFirstChildWhichIsA(
+			"BasePart",
+			true
+		)
+
+	if not primary then
+		return
+	end
+
+	local char =
+		player.Character
+		or player.CharacterAdded:Wait()
+
+	local hrp =
+		char:WaitForChild("HumanoidRootPart")
+
+	local connection
+
+	connection = RunService.Heartbeat:Connect(function(dt)
+
+		if not monster
+		or not monster.Parent
+		or not hrp
+		or not hrp.Parent then
+
+			connection:Disconnect()
+			return
+		end
+
+		local direction =
+			(hrp.Position - primary.Position).Unit
+
+		local newPos =
+			primary.Position
+			+ direction * speed * dt
+
+		local lookCF =
+			CFrame.new(newPos,hrp.Position)
+
+		if monster:IsA("Model") then
+			monster:PivotTo(lookCF)
+		else
+			primary.CFrame = lookCF
+		end
+
+		if (primary.Position - hrp.Position).Magnitude < 3 then
+
+			connection:Disconnect()
+
+			if monster and monster.Parent then
+				monster:Destroy()
+			end
+
+			jumpscareSequence()
+		end
+	end)
+end
+
+--// Start Monster
+local monster =
+	spawnInFront(
+		model2Id,
+		10,
+		3,
+		-2
+	)
+
+if monster then
+
+	local lookTime = 0
+	local notLookTime = 0
+
+	local checking = true
+
+	while checking
+	and monster
+	and monster.Parent do
+
+		task.wait(0.1)
+
+		if isLookingAt(monster) then
+
+			lookTime += 0.1
+			notLookTime = 0
+
+			if lookTime >= 2 then
+
+				local pos
+
+				if monster:IsA("Model") then
+					pos = monster:GetPivot()
+				else
+					local bp =
+						monster:FindFirstChildWhichIsA(
+							"BasePart"
+						)
+
+					if bp then
+						pos = bp.CFrame
+					end
+				end
+
+				monster:Destroy()
+
+				local newMonster =
+					spawnInFront(
+						model1Id,
+						10,
+						3,
+						-2
+					)
+
+				if newMonster and pos then
+
+					if newMonster:IsA("Model") then
+						newMonster:PivotTo(pos)
+					else
+						local bp =
+							newMonster:FindFirstChildWhichIsA(
+								"BasePart"
+							)
+
+						if bp then
+							bp.CFrame = pos
+						end
+					end
+				end
+
+				task.wait(0.5)
+
+				chasePlayer(
+					newMonster,
+					50
+				)
+
+				checking = false
+			end
+
+		else
+
+			lookTime = 0
+			notLookTime += 0.1
+
+			if notLookTime >= 2 then
+
+				fadeOut(
+					monster,
+					1.5
+				)
+
+				checking = false
+			end
+		end
+	end
+end
