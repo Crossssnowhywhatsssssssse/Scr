@@ -1,83 +1,284 @@
-local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Scr/main/New%20Spawner.txt"))()
-local entity = Spawner:Create({
-	Entity = {
-		Name = "Obess",
-		Asset = "rbxassetid://134303020544684",
-		HeightOffset = 0
-	},
-	Lights = {
-		Flicker = {Enabled = true, Duration = 20},
-		Shatter = true,
-		Repair = false
-	},
-	Earthquake = {
-		Enabled = false
-	},
-	CameraShake = {
-		Enabled = true,
-		Range = 100,
-		Values = {3.5, 20, 0.1, 0.5}
-	},
-	Movement = {
-		Speed = 150,
-		Delay = 5,
-		Reversed = false
-	},
-	Rebounding = {
-		Enabled = true,
-		Type = "Ambush",
-		Min = 2,
-		Max = 3,
-		Delay = 0.5
-	},
-	Damage = {
-		Enabled = true,
-		IgnoreHiding = false,
-		Range = 70,
-		Amount = 0.01
-	},
-	Crucifixion = {
-		Enabled = true,
-		Range = 40,
-		Resist = false,
-		Break = true
-	},
-	Death = {
-		Type = "Guiding", -- "Curious"
-		Hints = {"Death", "Hints", "Go", "Here"},
-		Cause = ""
-	}
-})
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local color = Instance.new("ColorCorrectionEffect", game.Lighting)
-game.TweenService:Create(color, TweenInfo.new(20), {
-        TintColor = Color3.fromRGB(100, 0, 255),
-        Saturation = -0.7,
-        Contrast = 0.2
-}):Play()
+local LocalPlayer = Players.LocalPlayer
+local CurrentRooms = workspace:WaitForChild("CurrentRooms")
 
-local Sielnce = Instance.new("Sound", workspace)
-         Sielnce.SoundId = "rbxassetid://5302239245"
-         Sielnce:Play()
-         Sielnce.Volume = 3
-         game.Debris:AddItem(Sielnce, 10)
-         
-entity:SetCallback("OnDespawning", function()
-    game.TweenService:Create(color, TweenInfo.new(10), {
-        TintColor = Color3.fromRGB(255, 255, 255),
-        Saturation = 0,
-        Contrast = 0
-    }):Play()
-    game.Debris:AddItem(color, 10)
+--------------------------------------------------
+-- LOAD MODEL
+--------------------------------------------------
+
+local obj = game:GetObjects("rbxassetid://134303020544684")[1]
+
+if not obj then
+	return
+end
+
+obj.Parent = workspace
+
+local mainPart
+
+if obj:IsA("BasePart") then
+	mainPart = obj
+else
+	mainPart = obj:FindFirstChildWhichIsA("BasePart", true)
+end
+
+if not mainPart then
+	obj:Destroy()
+	return
+end
+
+for _,v in ipairs(obj:GetDescendants()) do
+	if v:IsA("BasePart") then
+		v.Anchored = true
+		v.CanCollide = false
+	end
+end
+
+--------------------------------------------------
+-- ROOMS
+--------------------------------------------------
+
+local rooms = {}
+
+for _,room in ipairs(CurrentRooms:GetChildren()) do
+	local num = tonumber(room.Name)
+	if num then
+		table.insert(rooms,{
+			Number = num,
+			Room = room
+		})
+	end
+end
+
+table.sort(rooms,function(a,b)
+	return a.Number < b.Number
 end)
 
-entity:SetCallback("OnDamagePlayer", function(newHealth: number)
-	if not newHealth ~= 0 then
-		game.Players.LocalPlayer.Character.Humanoid.Health = 0
-		game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Obess"
-		local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
-        require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
+if #rooms == 0 then
+	obj:Destroy()
+	return
+end
+
+--------------------------------------------------
+-- SPAWN
+--------------------------------------------------
+
+local firstRoom = rooms[1].Room
+
+if not firstRoom:FindFirstChild("RoomEntrance") then
+	obj:Destroy()
+	return
+end
+
+local spawnCF =
+	firstRoom.RoomEntrance.CFrame
+	* CFrame.new(0,2,0)
+
+if obj:IsA("Model") then
+	obj:PivotTo(spawnCF)
+else
+	mainPart.CFrame = spawnCF
+end
+
+--------------------------------------------------
+-- EFFECT
+--------------------------------------------------
+
+local color = Instance.new("ColorCorrectionEffect")
+color.Parent = Lighting
+
+TweenService:Create(
+	color,
+	TweenInfo.new(20),
+	{
+		TintColor = Color3.fromRGB(100,0,255),
+		Saturation = -0.7,
+		Contrast = 0.2
+	}
+):Play()
+
+local silence = Instance.new("Sound")
+silence.Parent = workspace
+silence.SoundId = "rbxassetid://5302239245"
+silence.Volume = 3
+silence:Play()
+
+Debris:AddItem(silence,10)
+
+--------------------------------------------------
+-- KILL SYSTEM
+--------------------------------------------------
+
+local active = true
+
+task.spawn(function()
+	while active and obj.Parent do
+		task.wait(0.1)
+		local char = LocalPlayer.Character
+		if char then
+		
+			local hrp =
+				char:FindFirstChild("HumanoidRootPart")
+
+			local hum =
+				char:FindFirstChildOfClass("Humanoid")
+
+			if hrp and hum and hum.Health > 0 then
+				local dist =
+					(hrp.Position -
+					mainPart.Position).Magnitude
+
+				if dist <= 50 then
+					if not (char:GetAttribute("Crouching") or char:GetAttribute("Hiding")) then
+						hum.Health -= 80
+
+						pcall(function()
+							game.ReplicatedStorage
+							.GameStats[
+								"Player_" ..
+								LocalPlayer.Name
+							]
+							.Total.DeathCause.Value =
+							"Obess"
+						end)
+
+						break
+					end
+				end
+			end
+		end
 	end
 end)
 
-entity:Run(true)
+--------------------------------------------------
+-- MOVE FUNCTION
+--------------------------------------------------
+
+local function MoveTo(targetCF,time)
+	local cfValue = Instance.new("CFrameValue")
+
+	if obj:IsA("Model") then
+		cfValue.Value = obj:GetPivot()
+	else
+		cfValue.Value = mainPart.CFrame
+	end
+
+	local conn =
+		cfValue:GetPropertyChangedSignal("Value")
+		:Connect(function()
+
+			if not obj.Parent then
+				return
+			end
+
+			if obj:IsA("Model") then
+				obj:PivotTo(cfValue.Value)
+			else
+				mainPart.CFrame = cfValue.Value
+			end
+		end)
+
+	local tween = TweenService:Create(
+		cfValue,
+		TweenInfo.new(
+			time,
+			Enum.EasingStyle.Linear
+		),
+		{
+			Value = targetCF
+		}
+	)
+
+	tween:Play()
+	tween.Completed:Wait()
+
+	conn:Disconnect()
+	cfValue:Destroy()
+end
+
+--------------------------------------------------
+-- WAIT
+--------------------------------------------------
+
+task.wait(5)
+
+--------------------------------------------------
+-- PATHFIND NODES
+--------------------------------------------------
+
+for _,roomData in ipairs(rooms) do
+	local room = roomData.Room
+
+	local pathFolders = {}
+
+	for _,obj2 in ipairs(room:GetChildren()) do
+		if obj2.Name == "PathfindNode" then
+			table.insert(pathFolders,obj2)
+		end
+	end
+
+	for _,folder in ipairs(pathFolders) do
+		local nodes = {}
+		for _,node in ipairs(folder:GetChildren()) do
+			if node:IsA("BasePart") then
+				table.insert(nodes,node)
+			end
+		end
+
+		table.sort(nodes,function(a,b)
+
+			local na = tonumber(a.Name) or 0
+			local nb = tonumber(b.Name) or 0
+
+			return na < nb
+		end)
+
+		for _,node in ipairs(nodes) do
+			MoveTo(
+				node.CFrame *
+				CFrame.new(0,5,0),
+				0.5
+			)
+		end
+	end
+
+	if room:FindFirstChild("RoomExit") then
+		MoveTo(
+			room.RoomExit.CFrame
+			* CFrame.new(0,2,0),
+			0.5
+		)
+	end
+end
+
+--------------------------------------------------
+-- DESPAWN
+--------------------------------------------------
+
+active = false
+
+if obj then
+	obj:Destroy()
+end
+
+TweenService:Create(
+	color,
+	TweenInfo.new(10),
+	{
+		TintColor = Color3.fromRGB(
+			255,
+			255,
+			255
+		),
+		Saturation = 0,
+		Contrast = 0
+	}
+):Play()
+
+Debris:AddItem(color,10)
