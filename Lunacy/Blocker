@@ -42,7 +42,7 @@ local function createUI()
 	local sound = Instance.new("Sound")
 	sound.SoundId = "rbxassetid://138365271911299"
 	sound.Looped = true
-	sound.Volume = 5
+	sound.Volume = 1
 	sound.Parent = text
 
 	return gui,text,sound
