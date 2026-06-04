@@ -136,7 +136,7 @@ task.spawn(function()
 
 				if dist <= 50 then
 					if not (char:GetAttribute("Crouching") or char:GetAttribute("Hiding")) then
-						hum.Health -= 80
+						hum.Health = 0
 
 						pcall(function()
 							game.ReplicatedStorage
@@ -147,7 +147,12 @@ task.spawn(function()
 							.Total.DeathCause.Value =
 							"Obess"
 						end)
-
+						
+						pcall(function()
+						local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
+                                require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
+                        end)
+                        
 						break
 					end
 				end
@@ -156,50 +161,67 @@ task.spawn(function()
 	end
 end)
 
+local MoveSpeed = 35
+
 --------------------------------------------------
 -- MOVE FUNCTION
 --------------------------------------------------
 
-local function MoveTo(targetCF,time)
-	local cfValue = Instance.new("CFrameValue")
-
+local function GetCurrentCF()
 	if obj:IsA("Model") then
-		cfValue.Value = obj:GetPivot()
+		return obj:GetPivot()
 	else
-		cfValue.Value = mainPart.CFrame
+		return mainPart.CFrame
+	end
+end
+
+local function SetCurrentCF(cf)
+	if not obj.Parent then
+		return
 	end
 
-	local conn =
-		cfValue:GetPropertyChangedSignal("Value")
-		:Connect(function()
+	if obj:IsA("Model") then
+		obj:PivotTo(cf)
+	else
+		mainPart.CFrame = cf
+	end
+end
 
-			if not obj.Parent then
-				return
-			end
+local function MoveTo(targetCF)
+	local reached = false
 
-			if obj:IsA("Model") then
-				obj:PivotTo(cfValue.Value)
-			else
-				mainPart.CFrame = cfValue.Value
-			end
-		end)
+	while not reached and obj.Parent do
+		local currentCF = GetCurrentCF()
 
-	local tween = TweenService:Create(
-		cfValue,
-		TweenInfo.new(
-			time,
-			Enum.EasingStyle.Linear
-		),
-		{
-			Value = targetCF
-		}
-	)
+		local currentPos = currentCF.Position
+		local targetPos = targetCF.Position
 
-	tween:Play()
-	tween.Completed:Wait()
+		local offset = targetPos - currentPos
+		local distance = offset.Magnitude
 
-	conn:Disconnect()
-	cfValue:Destroy()
+		if distance <= 0.1 then
+			SetCurrentCF(targetCF)
+			reached = true
+			break
+		end
+
+		local dt = RunService.Heartbeat:Wait()
+		local moveAmount = MoveSpeed * dt
+
+		if moveAmount >= distance then
+			SetCurrentCF(targetCF)
+			reached = true
+		else
+			local alpha = moveAmount / distance
+			local nextCF =
+				currentCF:Lerp(
+					targetCF,
+					alpha
+				)
+
+			SetCurrentCF(nextCF)
+		end
+	end
 end
 
 --------------------------------------------------
@@ -242,8 +264,7 @@ for _,roomData in ipairs(rooms) do
 		for _,node in ipairs(nodes) do
 			MoveTo(
 				node.CFrame *
-				CFrame.new(0,5,0),
-				0.5
+				CFrame.new(0,5,0)
 			)
 		end
 	end
@@ -251,8 +272,7 @@ for _,roomData in ipairs(rooms) do
 	if room:FindFirstChild("RoomExit") then
 		MoveTo(
 			room.RoomExit.CFrame
-			* CFrame.new(0,2,0),
-			0.5
+			* CFrame.new(0,2,0)
 		)
 	end
 end
