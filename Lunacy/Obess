@@ -161,7 +161,7 @@ task.spawn(function()
 	end
 end)
 
-local MoveSpeed = 35
+local MoveSpeed = 60
 
 --------------------------------------------------
 -- MOVE FUNCTION
