@@ -1,101 +1,209 @@
 local MODEL_ID = "rbxassetid://124072039983366"
+
 local TweenService = game:GetService("TweenService")
 local Rooms = workspace:WaitForChild("CurrentRooms")
+
 local player = game.Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
 local COUNTDOWN = 15
-local DEPTH = 20
 
 local function getRoom()
 	local max = -math.huge
-	for _, r in ipairs(Rooms:GetChildren()) do
+
+	for _,r in ipairs(Rooms:GetChildren()) do
 		local n = tonumber(r.Name)
-		if n and n > max then max = n end
+
+		if n and n > max then
+			max = n
+		end
 	end
+
 	return Rooms:FindFirstChild(tostring(max - 1))
 end
 
 local function createUI()
-	local gui = Instance.new("ScreenGui", PlayerGui)
+	local gui = Instance.new("ScreenGui")
+	gui.Parent = PlayerGui
 
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.new(1,0,0,60)
-	text.Position = UDim2.new(0,0,0,5)
+	text.Position = UDim2.new(0,0,0,3)
 	text.BackgroundTransparency = 1
 	text.Font = Enum.Font.Creepster
-	text.TextSize = 32
+	text.TextSize = 45
 	text.TextColor3 = Color3.fromRGB(170,0,255)
 	text.Parent = gui
 
-	Instance.new("UIStroke", text).Thickness = 2
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Parent = text
 
-	local sound = Instance.new("Sound", text)
+	local sound = Instance.new("Sound")
 	sound.SoundId = "rbxassetid://138365271911299"
+	sound.Looped = true
+	sound.Volume = 5
+	sound.Parent = text
 
-	return gui, text, sound
+	return gui,text,sound
 end
 
 local function run()
 	local room = getRoom()
-	if not room then return end
+
+	if not room then
+		return
+	end
 
 	local exit = room:FindFirstChild("RoomExit", true)
-	if not exit then return end
 
-	local blocker = Instance.new("Part")
-	blocker.Size = Vector3.new(8,8,8)
-	blocker.Anchored = true
-	blocker.Transparency = 1
-	blocker.CanCollide = true
-	blocker.CFrame = exit.CFrame * CFrame.new(0,0,2)
-	blocker.Parent = workspace
+	if not exit then
+		return
+	end
 
 	local model = game:GetObjects(MODEL_ID)[1]
-	model.Parent = workspace
 
-	local pp = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
-	if not pp then return end
-	model.PrimaryPart = pp
+	if not model then
+		return
+	end
+
+	model.Parent = Rooms
+
+	local part
+
+	if model:IsA("BasePart") then
+		part = model
+	else
+		part = model:FindFirstChildWhichIsA("BasePart", true)
+	end
+
+	if not part then
+		model:Destroy()
+		return
+	end
 
 	for _,v in ipairs(model:GetDescendants()) do
 		if v:IsA("BasePart") then
 			v.Anchored = true
-			v.CanCollide = false
+			v.CanCollide = true
 		end
 	end
 
-	local baseCF = exit.CFrame
-	model:PivotTo(baseCF * CFrame.new(0, -DEPTH, 0))
+	part.Size = Vector3.new(8,8,8)
+	part.CanCollide = true
+	part.Transparency = 1
 
-	TweenService:Create(pp, TweenInfo.new(2), {CFrame = baseCF}):Play()
-	task.wait(2)
+	local baseCF =
+		exit.CFrame * CFrame.new(0,0,1)
 
-	local gui, text, sound = createUI()
+	local startCF =
+		baseCF * CFrame.new(0,-20,0)
 
-	for i = COUNTDOWN, 0, -1 do
-		text.Text = "Time left: "..i
-		
-		sound:Stop()
-        sound.TimePosition = 0
-        sound:Play()
-
-		text.TextSize = 36
-		TweenService:Create(text, TweenInfo.new(0.2), {TextSize = 32}):Play()
-
-		task.wait(1)
+	if model:IsA("Model") then
+		model:PivotTo(startCF)
+	else
+		part.CFrame = startCF
 	end
 
-	TweenService:Create(text, TweenInfo.new(2), {TextTransparency = 1}):Play()
-	TweenService:Create(pp, TweenInfo.new(2), {
-		CFrame = baseCF * CFrame.new(0, -DEPTH, 0)
-	}):Play()
+	local riseTween
+
+	if model:IsA("Model") then
+		local cf = Instance.new("CFrameValue")
+		cf.Value = startCF
+
+		cf:GetPropertyChangedSignal("Value"):Connect(function()
+			if model.Parent then
+				model:PivotTo(cf.Value)
+			end
+		end)
+
+		riseTween = TweenService:Create(
+			cf,
+			TweenInfo.new(2),
+			{
+				Value = baseCF
+			}
+		)
+		riseTween:Play()
+	else
+		riseTween = TweenService:Create(
+			part,
+			TweenInfo.new(2),
+			{
+				CFrame = baseCF
+			}
+		)
+		riseTween:Play()
+	end
 
 	task.wait(2)
+	local gui,text,sound = createUI()
+	
+	for i = COUNTDOWN,0,-1 do
+		text.Text = "Time left: "..i
 
-	gui:Destroy()
-	model:Destroy()
-	blocker:Destroy()
+		sound.TimePosition = 0
+		sound:Play()
+
+		text.TextSize = 45
+
+		TweenService:Create(
+			text,
+			TweenInfo.new(0.9),
+			{
+				TextSize = 36
+			}
+		):Play()
+
+		task.wait(0.96)
+	end
+	
+	sound:Destroy()
+
+	TweenService:Create(
+		text,
+		TweenInfo.new(3),
+		{
+			TextTransparency = 1
+		}
+	):Play()
+
+	if model:IsA("Model") then
+		local cf = Instance.new("CFrameValue")
+		cf.Value = baseCF
+
+		cf:GetPropertyChangedSignal("Value"):Connect(function()
+			if model.Parent then
+				model:PivotTo(cf.Value)
+			end
+		end)
+
+		TweenService:Create(
+			cf,
+			TweenInfo.new(3),
+			{
+				Value = startCF
+			}
+		):Play()
+	else
+		TweenService:Create(
+			part,
+			TweenInfo.new(3),
+			{
+				CFrame = startCF
+			}
+		):Play()
+	end
+
+	task.wait(3)
+
+	if gui then
+		gui:Destroy()
+	end
+
+	if model then
+		model:Destroy()
+	end
 end
 
 run()
