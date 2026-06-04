@@ -1,0 +1,113 @@
+local RunService = game:GetService("RunService")
+
+local camera = workspace.CurrentCamera
+
+if script then
+	script.Parent = nil
+end
+
+local function RaycastIgnoreTransparent(origin, direction)
+	local ignoreList = {}
+
+	while true do
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = ignoreList
+
+		local result = workspace:Raycast(origin, direction, params)
+
+		if not result then
+			return nil
+		end
+
+		local hit = result.Instance
+
+		if hit
+			and hit:IsA("BasePart")
+			and (
+				hit.Transparency > 0
+				or not hit.CanCollide
+			)
+		then
+			table.insert(ignoreList, hit)
+		else
+			return result
+		end
+	end
+end
+
+RunService.Heartbeat:Connect(function()
+	local camPos = camera.CFrame.Position
+
+	for i = 1, 2000 do
+		local startPos =
+			camPos +
+			Vector3.new(
+				math.random(-400, 400),
+				130,
+				math.random(-400, 400)
+			)
+
+		local result = RaycastIgnoreTransparent(
+			startPos,
+			Vector3.new(0, -260, 0)
+		)
+
+		if result then
+			local hitPos = result.Position
+			local drop = Instance.new("Part")
+			drop.Size = Vector3.new(0.05, 4, 0.05)
+			drop.Material = Enum.Material.Neon
+			drop.Color = Color3.fromRGB(100,0,255)
+			drop.Transparency = 0.65
+			drop.Anchored = true
+			drop.CanCollide = false
+			drop.CastShadow = false
+			drop.Position = startPos
+			drop.Parent = workspace
+
+			task.spawn(function()
+
+				local fallTime =
+					(startPos - hitPos).Magnitude / 220
+
+				local elapsed = 0
+				while elapsed < fallTime and drop.Parent do
+
+					local dt = RunService.Heartbeat:Wait()
+					elapsed += dt
+					local alpha =
+						math.clamp(
+							elapsed / fallTime,
+							0,
+							1
+						)
+
+					drop.Position =
+						startPos:Lerp(hitPos, alpha)
+				end
+
+				if not drop.Parent then
+					return
+				end
+
+				drop.Size = Vector3.new(0.2, 0.2, 0.2)
+
+				local bouncePos =
+					hitPos + Vector3.new(0, 0.8, 0)
+
+				for t = 0, 1, 0.25 do
+					drop.Position =
+						hitPos:Lerp(bouncePos, t)
+
+					drop.Transparency =
+						0.65 + (0.35 * t)
+
+					RunService.Heartbeat:Wait()
+				end
+
+				drop:Destroy()
+			end)
+		end
+	end
+end)
