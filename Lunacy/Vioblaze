@@ -57,7 +57,7 @@ end
 -- script thuc the
 -------------------------------
 
-local Spawner = loadstring(game:HttpGet("https://pastefy.app/18awUtXf/raw"))()
+local Spawner = loadstring(game:HttpGet("https://pastefy.app/SjDjuCeR/raw"))()
 
 local entity = Spawner:Create({
 Entity = {
