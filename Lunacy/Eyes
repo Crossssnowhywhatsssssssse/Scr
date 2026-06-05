@@ -1,0 +1,256 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+--------------------------------------------------
+-- ROOM EXIT
+--------------------------------------------------
+
+local latestRoom =
+	workspace.CurrentRooms:FindFirstChild(
+		tostring(
+			ReplicatedStorage.GameData.LatestRoom.Value
+		)
+	)
+
+if not latestRoom then
+	return
+end
+
+local roomExit = latestRoom:FindFirstChild("RoomExit")
+
+if not roomExit then
+	return
+end
+
+--------------------------------------------------
+-- SPAWN MODEL
+--------------------------------------------------
+
+local model = game:GetObjects(
+	"rbxassetid://116611350036479"
+)[1]
+
+if not model then
+	return
+end
+
+model.Parent = workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value]
+
+local mainPart
+
+if model:IsA("BasePart") then
+	mainPart = model
+else
+	mainPart = model:FindFirstChildWhichIsA(
+		"BasePart",
+		true
+	)
+end
+
+mainPart.Attachment.ParticleEmitter.Lifetime = NumberRange.new(1, 5)
+
+if not mainPart then
+	model:Destroy()
+	return
+end
+
+for _,v in ipairs(model:GetDescendants()) do
+	if v:IsA("BasePart") then
+		v.CanCollide = false
+		v.CanTouch = false
+		v.CanQuery = false
+		v.Anchored = true
+	end
+end
+
+local spawnCF =
+	roomExit.CFrame
+	* CFrame.new(0, 0, 0)
+
+if model:IsA("Model") then
+	model:PivotTo(spawnCF)
+else
+	mainPart.CFrame = spawnCF
+end
+
+--------------------------------------------------
+-- CAMERA SHAKE
+--------------------------------------------------
+
+local CameraShaker =
+	require(
+		ReplicatedStorage:WaitForChild(
+			"CameraShaker"
+		)
+	)
+
+local camShake =
+	CameraShaker.new(
+		Enum.RenderPriority.Camera.Value,
+		function(shakeCf)
+			camera.CFrame =
+				camera.CFrame * shakeCf
+		end
+	)
+
+camShake:Start()
+
+local shakeCooldown = false
+
+--------------------------------------------------
+-- LOS CHECK
+--------------------------------------------------
+
+local function CanSeeTarget(targetPos)
+	local char =
+		player.Character
+
+	local hrp =
+		char
+		and char:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not hrp then
+		return false
+	end
+
+	local direction =
+		targetPos - camera.CFrame.Position
+
+	local params = RaycastParams.new()
+	params.FilterType =
+		Enum.RaycastFilterType.Exclude
+
+	params.FilterDescendantsInstances = {
+		char
+	}
+
+	local result =
+		workspace:Raycast(
+			camera.CFrame.Position,
+			direction,
+			params
+		)
+
+	if not result then
+		return true
+	end
+
+	return result.Instance:IsDescendantOf(
+		model
+	)
+end
+
+--------------------------------------------------
+-- LOOK DAMAGE
+--------------------------------------------------
+
+local damageTick = 0
+
+RunService.Heartbeat:Connect(function(dt)
+	if not model.Parent then
+		return
+	end
+
+	local char =
+		player.Character
+
+	local hum =
+		char
+		and char:FindFirstChildOfClass(
+			"Humanoid"
+		)
+
+	local hrp =
+		char
+		and char:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not hum or not hrp then
+		return
+	end
+
+	----------------------------------
+	-- SHAKE
+	----------------------------------
+
+	local dist =
+		(hrp.Position -
+		mainPart.Position).Magnitude
+
+	if dist <= 100 and not shakeCooldown then
+
+		shakeCooldown = true
+
+		camShake:ShakeOnce(
+			10,
+			18,
+			0.1,
+			2,
+			10,
+			10
+		)
+
+		task.delay(0.5,function()
+			shakeCooldown = false
+		end)
+	end
+
+	----------------------------------
+	-- LOOKING
+	----------------------------------
+
+	local screenPos,onScreen =
+		camera:WorldToViewportPoint(
+			mainPart.Position
+		)
+
+	if onScreen then
+
+		local center =
+			Vector2.new(
+				camera.ViewportSize.X/2,
+				camera.ViewportSize.Y/2
+			)
+
+		local pos2d =
+			Vector2.new(
+				screenPos.X,
+				screenPos.Y
+			)
+
+		if (center - pos2d).Magnitude <= 200
+		and CanSeeTarget(mainPart.Position) then
+
+			damageTick += dt
+			if damageTick >= 0.1 then
+				damageTick = 0
+				hum:TakeDamage(1)
+				game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Dimensional Eye"
+				
+				local sound =
+					Instance.new("Sound")
+				sound.SoundId =
+					"rbxassetid://127155960884656"
+				sound.Looped = false
+				sound.PlaybackSpeed = 1.8
+				sound.Volume = 2
+				sound.Parent = workspace
+				sound:Play()
+
+				Debris:AddItem(sound,5)
+			end
+		else
+			damageTick = 0
+		end
+	else
+		damageTick = 0
+	end
+end)
