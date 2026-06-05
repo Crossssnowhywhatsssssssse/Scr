@@ -73,9 +73,6 @@ Duration = 1
 Shatter = false,
 Repair = false
 },
-Earthquake = {
-Enabled = false
-},
 CameraShake = {
 Enabled = true,
 Range = 100,
