@@ -39,7 +39,7 @@ end
 RunService.Heartbeat:Connect(function()
 	local camPos = camera.CFrame.Position
 
-	for i = 1, 150 do
+	for i = 1, 120 do
 		local startPos =
 			camPos +
 			Vector3.new(
