@@ -1,0 +1,149 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local latestRoom = ReplicatedStorage.GameData.LatestRoom
+
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+
+--------------------------------------------------
+-- ROOM
+--------------------------------------------------
+
+local room = workspace.CurrentRooms:FindFirstChild(
+	tostring(latestRoom.Value)
+)
+
+if not room then
+	return
+end
+
+--------------------------------------------------
+-- BLOCKED ITEMS CHECK
+--------------------------------------------------
+
+local blockedNames = {
+	KeyObtain = true,
+	LeverForGate = true,
+	LiveHintBook = true,
+	ElevatorKeyObtain = true,
+	LiveBreakerPolePickup = true
+}
+
+for _, obj in ipairs(room:GetDescendants()) do
+	if blockedNames[obj.Name] then
+		return
+	end
+end
+
+local pathfind = room:FindFirstChild("PathfindNode")
+local node3 = pathfind and pathfind:FindFirstChild("3")
+
+if not node3 then
+	return
+end
+
+--------------------------------------------------
+-- SPAWN MODEL
+--------------------------------------------------
+
+local model = game:GetObjects(
+	"rbxassetid://16899177807"
+)[1]
+
+if not model then
+	return
+end
+
+model.Parent = workspace
+
+if model:IsA("BasePart") then
+	model.Anchored = true
+	model.CanCollide = false
+	model.CFrame = node3.CFrame * CFrame.new(0,3,0)
+else
+	model:Destroy()
+	return
+end
+
+model.Attachment.FaceParticle.Rate = 100
+
+--------------------------------------------------
+-- SPEED DRAIN
+--------------------------------------------------
+
+local originalSpeed = hum.WalkSpeed
+local duration = 30
+
+local startTime = tick()
+local active = true
+
+local function Cleanup()
+	if not active then
+		return
+	end
+
+	active = false
+
+	if model and model.Parent then
+		model:Destroy()
+	end
+
+	if hum and hum.Parent then
+		hum.WalkSpeed = originalSpeed
+	end
+end
+
+--------------------------------------------------
+-- ROOM CHANGE
+--------------------------------------------------
+
+local roomConn
+roomConn = latestRoom.Changed:Connect(function()
+	Cleanup()
+
+	if roomConn then
+		roomConn:Disconnect()
+	end
+end)
+
+--------------------------------------------------
+-- SPEED CONTROL
+--------------------------------------------------
+
+local hb
+hb = RunService.Heartbeat:Connect(function()
+	if not active then
+		hb:Disconnect()
+		return
+	end
+
+	if not hum.Parent then
+		return
+	end
+
+	local alpha =
+		math.clamp(
+			(tick() - startTime) / duration,
+			0,
+			1
+		)
+
+	local targetSpeed =
+		originalSpeed * (1 - alpha)
+
+	hum.WalkSpeed = targetSpeed
+
+	if targetSpeed <= 0.1 then
+		hum.Health = 0
+
+		pcall(function()
+			ReplicatedStorage
+				.GameStats["Player_" .. player.Name]
+				.Total.DeathCause.Value =
+				"Alma"
+		end)
+	end
+end)
