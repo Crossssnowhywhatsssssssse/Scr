@@ -99,8 +99,7 @@ local function SetupSeek(seek)
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Parent = attachment
 	emitter.Enabled = true
-	emitter.Rate = 5000
-    emitter.Brightness = 0.5
+	emitter.Rate = 999999
 	emitter.Lifetime = NumberRange.new(0.1, 0.1)
 	emitter.Speed = NumberRange.new(0)
 	emitter.Size = NumberSequence.new(5)
