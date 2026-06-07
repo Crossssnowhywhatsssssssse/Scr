@@ -1,24 +1,6 @@
-local TweenService = game:GetService("TweenService")
-local color = true
-local clone = game.Lighting:FindFirstChild("MainColorCorrection"):Clone()
-clone.Parent = game.Lighting
+local Spawner = loadstring(game:HttpGet("https://pastefy.app/f31mgm0k/raw"))()
 
-local sound = Instance.new("Sound")
-sound.Name = "Thunder"
-sound.SoundId = "rbxassetid://8068501155"
-sound.Volume = 5
-sound.Parent = workspace
-
-local octave = Instance.new("PitchShiftSoundEffect")
-octave.Octave = 0.5
-octave.Parent = sound
-
-local level = Instance.new("DistortionSoundEffect")
-level.Level = 0.75
-level.Parent = sound
-
-local Spawner = loadstring(game:HttpGet("https://pastefy.app/18awUtXf/raw"))()
-local g95 = Spawner:Create({
+local entity = Spawner:Create({
 	Entity = {
 		Name = "The Lord",
 		Asset = "rbxassetid://131036299867520",
@@ -29,7 +11,6 @@ local g95 = Spawner:Create({
 		Shatter = true,
 		Repair = false
 	},
-	Earthquake = { Enabled = true },
 	CameraShake = {
 		Enabled = true,
 		Range = 100,
@@ -50,12 +31,12 @@ local g95 = Spawner:Create({
 	Damage = {
 		Enabled = true,
 		IgnoreHiding = false,
-		Range = 100,
-		Amount = 999
+		Range = 70,
+		Amount = 150
 	},
 	Crucifixion = {
 		Enabled = true,
-		Range = 999,
+		Range = 69,
 		Resist = true,
 		Break = true
 	},
@@ -71,10 +52,27 @@ local g95 = Spawner:Create({
 	}
 })
 
-sound:Play()
+local TweenService = game:GetService("TweenService")
+local color = true
+local clone = game.Lighting:FindFirstChild("MainColorCorrection"):Clone()
+clone.Parent = game.Lighting
 
-g95:SetCallback("OnSpawned", function()
-	repeat task.wait() until g95.Model
+local sound = Instance.new("Sound")
+sound.Name = "Thunder"
+sound.SoundId = "rbxassetid://8068501155"
+sound.Volume = 5
+sound.Parent = workspace
+
+local octave = Instance.new("PitchShiftSoundEffect")
+octave.Octave = 0.5
+octave.Parent = sound
+
+local level = Instance.new("DistortionSoundEffect")
+level.Level = 0.75
+level.Parent = sound
+
+entity:SetCallback("OnSpawned", function()
+    sound:Play()
 
 	task.spawn(function()
 		while color do
@@ -91,7 +89,7 @@ g95:SetCallback("OnSpawned", function()
 	end)
 
 	task.spawn(function()
-		for _,v in ipairs(g95.Model:GetDescendants()) do
+		for _,v in ipairs(entity.Model:GetDescendants()) do
 			if v:IsA("Sound") and (v.Name == "Glitching Sound Effect 4" or v.Name == "scary_scream_glitch_V2") then
 				v.PlaybackSpeed = 0.2
 			end
@@ -99,7 +97,7 @@ g95:SetCallback("OnSpawned", function()
 	end)
 end)
 
-g95:SetCallback("OnDespawning", function()
+entity:SetCallback("OnDespawning", function()
 	color = false
 	if sound then sound:Destroy() end
 
@@ -118,10 +116,10 @@ g95:SetCallback("OnDespawning", function()
 	cc:Destroy()
 end)
 
-g95:SetCallback("OnDamagePlayer", function(newHealth)
+entity:SetCallback("OnDamagePlayer", function(newHealth)
 	if newHealth == 0 or newHealth < 0 then
 		loadstring(game:HttpGet("https://pastefy.app/xclq6IqV/raw"))()
 	end
 end)
 
-g95:Run(true)
+entity:Run(true)
