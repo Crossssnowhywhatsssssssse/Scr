@@ -100,6 +100,7 @@ local function SetupSeek(seek)
 	emitter.Parent = attachment
 	emitter.Enabled = true
 	emitter.Rate = 5000
+    emitter.Brightness = 0.5
 	emitter.Lifetime = NumberRange.new(0.1, 0.1)
 	emitter.Speed = NumberRange.new(0)
 	emitter.Size = NumberSequence.new(4)
@@ -137,7 +138,17 @@ Workspace.DescendantAdded:Connect(function(obj)
 		task.defer(function()
 			SetupSeek(obj)
 		end)
-	else
-		HideObject(obj)
+		return
+	end
+
+	local parent = obj.Parent
+
+	while parent do
+		if parent.Name == "SeekMovingNewClone" then
+			HideObject(obj)
+			break
+		end
+
+		parent = parent.Parent
 	end
 end)
