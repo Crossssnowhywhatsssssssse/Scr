@@ -103,7 +103,7 @@ local function SetupSeek(seek)
     emitter.Brightness = 0.5
 	emitter.Lifetime = NumberRange.new(0.1, 0.1)
 	emitter.Speed = NumberRange.new(0)
-	emitter.Size = NumberSequence.new(4)
+	emitter.Size = NumberSequence.new(5)
 	emitter.Texture = PARTICLE_TEXTURE
 
 	local hb
