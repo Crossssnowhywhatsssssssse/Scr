@@ -1,0 +1,143 @@
+local Workspace = game:GetService("Workspace")
+
+local function getGitImage(url,name)
+	local file = name..".png"
+
+	if getcustomasset and writefile and isfile then
+		if not isfile(file) then
+			writefile(
+				file,
+				game:HttpGet(url)
+			)
+		end
+
+		local asset = getcustomasset(file)
+
+		task.spawn(function()
+			task.delay(0.5,function()
+				if delfile and isfile(file) then
+					pcall(function()
+						delfile(file)
+					end)
+				end
+			end)
+		end)
+
+		return asset
+	end
+
+	return ""
+end
+
+local PARTICLE_TEXTURE = getGitImage(
+	"https://raw.githubusercontent.com/Whatttt23/Scr/main/Kh%C3%B4ng%20C%C3%B3%20Ti%C3%AAu%20%C4%90%E1%BB%81244_20260606220200.png",
+	"seek_particle"
+)
+
+local FollowConnections = {}
+
+local function HideObject(obj)
+	if obj:IsA("BasePart") then
+		obj.Transparency = 1
+
+		obj:GetPropertyChangedSignal("Transparency"):Connect(function()
+			if obj.Parent then
+				obj.Transparency = 1
+			end
+		end)
+
+	elseif obj:IsA("Decal")
+		or obj:IsA("Texture")
+		or obj:IsA("ImageLabel")
+		or obj:IsA("ImageButton") then
+
+		obj.Transparency = 1
+
+		obj:GetPropertyChangedSignal("Transparency"):Connect(function()
+			if obj.Parent then
+				obj.Transparency = 1
+			end
+		end)
+	end
+end
+
+local function SetupSeek(seek)
+	if FollowConnections[seek] then
+		return
+	end
+
+	for _,v in ipairs(seek:GetDescendants()) do
+		HideObject(v)
+	end
+
+	local head
+
+	for _,v in ipairs(seek:GetDescendants()) do
+		if v.Name == "Head" and v:IsA("BasePart") then
+			head = v
+			break
+		end
+	end
+
+	if not head then
+		return
+	end
+
+	local part = Instance.new("Part")
+	part.Name = "_SeekParticlePart"
+	part.Size = Vector3.new(5,5,5)
+	part.Transparency = 1
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
+	part.Anchored = true
+	part.Parent = Workspace
+
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = part
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Parent = attachment
+	emitter.Enabled = true
+	emitter.Rate = 5000
+	emitter.Lifetime = NumberRange.new(0.1, 0.1)
+	emitter.Speed = NumberRange.new(0)
+	emitter.Size = NumberSequence.new(4)
+	emitter.Texture = PARTICLE_TEXTURE
+
+	local hb
+	hb = game:GetService("RunService").Heartbeat:Connect(function()
+		if not seek.Parent or not head.Parent then
+			hb:Disconnect()
+
+			if part then
+				part:Destroy()
+			end
+
+			FollowConnections[seek] = nil
+			return
+		end
+
+		part.CFrame = head.CFrame
+	end)
+
+	FollowConnections[seek] = hb
+
+	seek.DescendantAdded:Connect(HideObject)
+end
+
+for _,obj in ipairs(Workspace:GetDescendants()) do
+	if obj.Name == "SeekMovingNewClone" then
+		SetupSeek(obj)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+	if obj.Name == "SeekMovingNewClone" then
+		task.defer(function()
+			SetupSeek(obj)
+		end)
+	else
+		HideObject(obj)
+	end
+end)
