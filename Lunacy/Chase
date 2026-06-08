@@ -100,6 +100,9 @@ local function SetupSeek(seek)
 	emitter.Parent = attachment
 	emitter.Enabled = true
 	emitter.Rate = 999999
+	emitter.LightEmission = 0
+    emitter.Brightness = 0.5
+	emitter.Transparency = NumberSequence.new(0)
 	emitter.Lifetime = NumberRange.new(0.1, 0.1)
 	emitter.Speed = NumberRange.new(0)
 	emitter.Size = NumberSequence.new(5)
