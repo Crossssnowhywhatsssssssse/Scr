@@ -1,0 +1,174 @@
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local function getGitImage(url,name)
+	local file = name..".png"
+
+	if getcustomasset and writefile and isfile then
+		if not isfile(file) then
+			writefile(file, game:HttpGet(url))
+		end
+
+		local asset = getcustomasset(file)
+
+		task.spawn(function()
+			task.delay(0.5,function()
+				if delfile and isfile(file) then
+					pcall(function()
+						delfile(file)
+					end)
+				end
+			end)
+		end)
+
+		return asset
+	end
+
+	return ""
+end
+
+local PARTICLE_TEXTURE = getGitImage(
+	"https://raw.githubusercontent.com/Whatttt23/Scr/main/Kh%C3%B4ng%20C%C3%B3%20Ti%C3%AAu%20%C4%90%E1%BB%81244_20260608165500.png",
+	"figure_particle"
+)
+
+local ActiveFigures = {}
+
+local function HideObject(obj)
+	if obj:IsA("BasePart") then
+		obj.Transparency = 1
+
+		obj:GetPropertyChangedSignal("Transparency"):Connect(function()
+			if obj.Parent then
+				obj.Transparency = 1
+			end
+		end)
+
+	elseif obj:IsA("Decal")
+		or obj:IsA("Texture")
+		or obj:IsA("ImageLabel")
+		or obj:IsA("ImageButton") then
+
+		obj.Transparency = 1
+
+		obj:GetPropertyChangedSignal("Transparency"):Connect(function()
+			if obj.Parent then
+				obj.Transparency = 1
+			end
+		end)
+	end
+end
+
+local function IsFigure(obj)
+	if not obj then
+		return false
+	end
+
+	return obj.Name == "FigureRig"
+end
+
+local function GetHead(model)
+	for _,v in ipairs(model:GetDescendants()) do
+		if v.Name == "Head" and v:IsA("BasePart") then
+			return v
+		end
+	end
+
+	return model:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function SetupFigure(figure)
+	if ActiveFigures[figure] then
+		return
+	end
+
+	for _,v in ipairs(figure:GetDescendants()) do
+		HideObject(v)
+	end
+
+	local head = GetHead(figure)
+
+	if not head then
+		return
+	end
+
+	local holder = Instance.new("Part")
+	holder.Name = "_FigureParticlePart"
+	holder.Size = Vector3.new(5,5,5)
+	holder.Transparency = 1
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanTouch = false
+	holder.CanQuery = false
+	holder.Parent = Workspace
+
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = holder
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Parent = attachment
+	emitter.Texture = PARTICLE_TEXTURE
+	emitter.Enabled = true
+	emitter.Rate = 999999
+	emitter.Lifetime = NumberRange.new(0.1,0.1)
+	emitter.Speed = NumberRange.new(0)
+	emitter.Size = NumberSequence.new(6)
+	emitter.Transparency = NumberSequence.new(0)
+	emitter.LightEmission = 0
+	emitter.Brightness = 0.5
+
+	local descendantConn = figure.DescendantAdded:Connect(function(obj)
+		HideObject(obj)
+	end)
+
+	local hb
+	hb = RunService.Heartbeat:Connect(function()
+		if not figure.Parent or not head.Parent then
+			hb:Disconnect()
+			descendantConn:Disconnect()
+
+			if holder then
+				holder:Destroy()
+			end
+
+			ActiveFigures[figure] = nil
+			return
+		end
+
+		holder.CFrame = head.CFrame
+	end)
+
+	ActiveFigures[figure] = {
+		Heartbeat = hb,
+		DescendantAdded = descendantConn
+	}
+end
+
+for _,obj in ipairs(Workspace:GetDescendants()) do
+	if IsFigure(obj) then
+		SetupFigure(obj)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+	if IsFigure(obj) then
+		task.defer(function()
+			if obj.Parent then
+				SetupFigure(obj)
+			end
+		end)
+
+		return
+	end
+
+	local parent = obj.Parent
+
+	while parent do
+		if IsFigure(parent) then
+			HideObject(obj)
+			break
+		end
+
+		parent = parent.Parent
+	end
+end)
