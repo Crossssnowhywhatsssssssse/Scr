@@ -75,7 +75,7 @@ model.Attachment.FaceParticle.Rate = 100
 --------------------------------------------------
 
 local originalSpeed = hum.WalkSpeed
-local duration = 40
+local duration = 30
 
 local startTime = tick()
 local active = true
