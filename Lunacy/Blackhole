@@ -1,0 +1,231 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local latestRoom = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom")
+local currentRooms = workspace:WaitForChild("CurrentRooms")
+
+--------------------------------------------------
+-- ROOM
+--------------------------------------------------
+
+local room = currentRooms:FindFirstChild(
+	tostring(latestRoom.Value)
+)
+
+if not room then
+	return
+end
+
+local pathfind = room:FindFirstChild("PathfindNode")
+
+if not pathfind then
+	return
+end
+
+--------------------------------------------------
+-- FIND MIDDLE NODE
+--------------------------------------------------
+
+local maxNumber = 0
+
+for _, v in ipairs(pathfind:GetChildren()) do
+	local n = tonumber(v.Name)
+
+	if n and n > maxNumber then
+		maxNumber = n
+	end
+end
+
+if maxNumber <= 0 then
+	return
+end
+
+local middleNumber = math.floor(maxNumber / 2)
+
+if middleNumber < 1 then
+	middleNumber = 1
+end
+
+local targetNode = pathfind:FindFirstChild(
+	tostring(middleNumber)
+)
+
+if not targetNode or not targetNode:IsA("BasePart") then
+	return
+end
+
+--------------------------------------------------
+-- LOAD MODEL
+--------------------------------------------------
+
+local model = game:GetObjects(
+	"rbxassetid://12430089504"
+)[1]
+
+if not model then
+	return
+end
+
+model.Parent = workspace
+
+local mainPart = model:FindFirstChildWhichIsA(
+	"BasePart",
+	true
+)
+
+if not mainPart then
+	model:Destroy()
+	return
+end
+
+--------------------------------------------------
+-- POSITION
+--------------------------------------------------
+
+local spawnCF =
+	targetNode.CFrame
+	* CFrame.new(0, 3, 0)
+
+if model:IsA("Model") then
+	model:PivotTo(spawnCF)
+else
+	mainPart.CFrame = spawnCF
+end
+
+--------------------------------------------------
+-- MODIFY MODEL
+--------------------------------------------------
+
+local sound1 = model:FindFirstChild("sound1", true)
+
+if sound1 and sound1:IsA("Sound") then
+	sound1.PlaybackSpeed = 0.05
+end
+
+local sound2 = model:FindFirstChild("sound2", true)
+
+if sound2 and sound2:IsA("Sound") then
+	sound2.PlaybackSpeed = 0.1
+end
+
+for _, v in ipairs(model:GetDescendants()) do
+
+	if v:IsA("ParticleEmitter") then
+		v.Size = NumberSequence.new(5)
+		v.Color = ColorSequence.new(Color3.new(1,1,1))
+		v.Rate = 500
+		v.Rotation = NumberRange.new(-10, 10)
+		v.Speed = NumberRange.new(0, 10)
+		v.Texture =
+			"rbxassetid://70434559138014"
+	end
+
+	if v:IsA("PointLight") then
+		v.Color = Color3.fromRGB(
+			255,
+			255,
+			255
+		)
+	end
+
+	if v:IsA("BasePart") then
+		v.Anchored = true
+		v.CanCollide = false
+	end
+end
+
+--------------------------------------------------
+-- SUCTION
+--------------------------------------------------
+
+local active = true
+
+local pullRadius = 100
+local pullForce = 11
+
+local pullConnection
+
+pullConnection =
+	RunService.Heartbeat:Connect(function(dt)
+
+	if not active then
+		return
+	end
+
+	local character = player.Character
+
+	if not character then
+		return
+	end
+
+	local hrp =
+		character:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	local hum =
+		character:FindFirstChildOfClass(
+			"Humanoid"
+		)
+
+	if not hrp or not hum then
+		return
+	end
+
+	local offset =
+		mainPart.Position - hrp.Position
+
+	local distance =
+		offset.Magnitude
+
+	if distance <= pullRadius
+		and distance > 1 then
+
+		local horizontal =
+			Vector3.new(
+				offset.X,
+				0,
+				offset.Z
+			)
+
+		if horizontal.Magnitude > 0 then
+
+			local move =
+				horizontal.Unit
+				* pullForce
+				* dt
+
+			hrp.CFrame =
+				hrp.CFrame
+				+ move
+		end
+	end
+end)
+
+--------------------------------------------------
+-- ROOM CHANGE
+--------------------------------------------------
+
+local roomConnection
+
+roomConnection =
+	latestRoom:GetPropertyChangedSignal(
+		"Value"
+	):Connect(function()
+
+	active = false
+
+	if pullConnection then
+		pullConnection:Disconnect()
+	end
+
+	if roomConnection then
+		roomConnection:Disconnect()
+	end
+
+	if model and model.Parent then
+		model:Destroy()
+	end
+end)
