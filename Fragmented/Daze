@@ -135,7 +135,7 @@ local function Attack()
 			].Total.DeathCause.Value = "Daze"
 		end)
 		
-		if hum.Health > 0 then
+		if hum.Health < 0 then
 		    pcall(function()
 		       local main_game = require(
 				player.PlayerGui.MainUI.Initiator.Main_Game
