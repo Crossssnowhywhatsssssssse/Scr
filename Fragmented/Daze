@@ -1,0 +1,213 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local function GetCharacter()
+	return player.Character or player.CharacterAdded:Wait()
+end
+
+local function GetHRP()
+	local char = GetCharacter()
+	return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local model = game:GetObjects("rbxassetid://14123016442")[1]
+if not model then
+	return
+end
+
+local entity = model:FindFirstChildWhichIsA("BasePart", true)
+
+if not entity then
+	model:Destroy()
+	return
+end
+
+entity.Parent = workspace
+
+pcall(function()
+	model:Destroy()
+end)
+
+local hrp = GetHRP()
+
+if not hrp then
+	entity:Destroy()
+	return
+end
+
+entity.CFrame = hrp.CFrame * CFrame.new(0, 0, -7)
+entity.Anchored = true
+entity.CanCollide = false
+
+local attachment = entity:FindFirstChild("Attachment")
+
+if attachment then
+	local face = attachment:FindFirstChild("face")
+
+	if face and face:IsA("ParticleEmitter") then
+		face.Rate = 100
+		face.Speed = NumberRange.new(5,10)
+		face.RotSpeed = NumberRange.new(-180,180)
+	end
+end
+
+local horrorScream = entity:FindFirstChild("jumpscare")
+
+if horrorScream and horrorScream:IsA("Sound") then
+	horrorScream.Volume = 5
+end
+
+local active = true
+local despawning = false
+
+local function IsLookingAt()
+	if not entity.Parent then
+		return false
+	end
+
+	local direction =
+		entity.Position - camera.CFrame.Position
+
+	if direction.Magnitude <= 0.01 then
+		return true
+	end
+
+	return direction.Unit:Dot(
+		camera.CFrame.LookVector
+	) > 0.8
+end
+
+local function Despawn()
+	if despawning then
+		return
+	end
+
+	despawning = true
+	active = false
+
+	if not entity.Parent then
+		return
+	end
+
+	local tween = TweenService:Create(
+		entity,
+		TweenInfo.new(
+			5,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		),
+		{
+			CFrame = entity.CFrame * CFrame.new(0,-100,0)
+		}
+	)
+
+	tween:Play()
+
+	tween.Completed:Connect(function()
+		if entity and entity.Parent then
+			entity:Destroy()
+		end
+	end)
+end
+
+local function Attack()
+	if not active then
+		return
+	end
+
+	active = false
+
+	local char = GetCharacter()
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local root = char:FindFirstChild("HumanoidRootPart")
+
+	if hum then
+		hum:TakeDamage(math.random(15,20))
+
+		pcall(function()
+			ReplicatedStorage.GameStats[
+				"Player_" .. player.Name
+			].Total.DeathCause.Value = "Daze"
+		end)
+		
+		if hum.Health > 0 then
+		    pcall(function()
+		       local main_game = require(
+				player.PlayerGui.MainUI.Initiator.Main_Game
+			)
+
+			require(
+				player.PlayerGui.MainUI.Initiator.Main_Game
+				.RemoteListener.Jumpscares.Death
+			)(main_game)
+		    end)
+		end
+	end
+
+	if horrorScream then
+		horrorScream.TimePosition = 0
+		horrorScream:Play()
+	end
+
+	if root and entity.Parent then
+		local attackTween = TweenService:Create(
+			entity,
+			TweenInfo.new(
+				0.4,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.Out
+			),
+			{
+				CFrame = root.CFrame * CFrame.new(0,0,-3)
+			}
+		)
+
+		attackTween:Play()
+
+		attackTween.Completed:Connect(function()
+			if entity.Parent then
+				Despawn()
+			end
+		end)
+	else
+		Despawn()
+	end
+end
+
+task.delay(3, function()
+	if not active or not entity.Parent then
+		return
+	end
+
+	if not IsLookingAt() then
+		Despawn()
+		return
+	end
+
+	local startTime = tick()
+
+	local conn
+	conn = RunService.Heartbeat:Connect(function()
+
+		if not active or not entity.Parent then
+			conn:Disconnect()
+			return
+		end
+
+		if not IsLookingAt() then
+			conn:Disconnect()
+			Despawn()
+			return
+		end
+
+		if tick() - startTime >= math.random(3, 5) then
+			conn:Disconnect()
+			Attack()
+		end
+	end)
+end)
