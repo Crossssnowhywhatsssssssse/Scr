@@ -16,12 +16,9 @@ local function GetHRP()
 end
 
 local model = game:GetObjects("rbxassetid://14123016442")[1]
-if not model then
-	return
-end
+if not model then return end
 
 local entity = model:FindFirstChildWhichIsA("BasePart", true)
-
 if not entity then
 	model:Destroy()
 	return
@@ -29,23 +26,17 @@ end
 
 entity.Parent = workspace
 
-pcall(function()
-	model:Destroy()
-end)
-
 local hrp = GetHRP()
-
 if not hrp then
 	entity:Destroy()
 	return
 end
 
-entity.CFrame = hrp.CFrame * CFrame.new(0, 0, -7)
+entity.CFrame = hrp.CFrame * CFrame.new(0,0,-7)
 entity.Anchored = true
 entity.CanCollide = false
 
 local attachment = entity:FindFirstChild("Attachment")
-
 if attachment then
 	local face = attachment:FindFirstChild("face")
 
@@ -57,7 +48,6 @@ if attachment then
 end
 
 local horrorScream = entity:FindFirstChild("jumpscare")
-
 if horrorScream and horrorScream:IsA("Sound") then
 	horrorScream.Volume = 5
 end
@@ -70,16 +60,13 @@ local function IsLookingAt()
 		return false
 	end
 
-	local direction =
-		entity.Position - camera.CFrame.Position
+	local direction = entity.Position - camera.CFrame.Position
 
 	if direction.Magnitude <= 0.01 then
 		return true
 	end
 
-	return direction.Unit:Dot(
-		camera.CFrame.LookVector
-	) > 0.8
+	return direction.Unit:Dot(camera.CFrame.LookVector) > 0.8
 end
 
 local function Despawn()
@@ -96,11 +83,7 @@ local function Despawn()
 
 	local tween = TweenService:Create(
 		entity,
-		TweenInfo.new(
-			5,
-			Enum.EasingStyle.Quad,
-			Enum.EasingDirection.Out
-		),
+		TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 		{
 			CFrame = entity.CFrame * CFrame.new(0,-100,0)
 		}
@@ -108,7 +91,7 @@ local function Despawn()
 
 	tween:Play()
 
-	tween.Completed:Connect(function()
+	tween.Completed:Once(function()
 		if entity and entity.Parent then
 			entity:Destroy()
 		end
@@ -126,57 +109,65 @@ local function Attack()
 	local hum = char:FindFirstChildOfClass("Humanoid")
 	local root = char:FindFirstChild("HumanoidRootPart")
 
-	if hum then
-		hum:TakeDamage(math.random(15,20))
-
-		pcall(function()
-			ReplicatedStorage.GameStats[
-				"Player_" .. player.Name
-			].Total.DeathCause.Value = "Daze"
-		end)
-		
-		if hum.Health < 0 then
-		    pcall(function()
-		       local main_game = require(
-				player.PlayerGui.MainUI.Initiator.Main_Game
-			)
-
-			require(
-				player.PlayerGui.MainUI.Initiator.Main_Game
-				.RemoteListener.Jumpscares.Death
-			)(main_game)
-		    end)
-		end
-	end
-
 	if horrorScream then
 		horrorScream.TimePosition = 0
 		horrorScream:Play()
 	end
 
-	if root and entity.Parent then
-		local attackTween = TweenService:Create(
-			entity,
-			TweenInfo.new(
-				0.4,
-				Enum.EasingStyle.Quad,
-				Enum.EasingDirection.Out
-			),
-			{
-				CFrame = root.CFrame * CFrame.new(0,0,-3)
-			}
-		)
-
-		attackTween:Play()
-
-		attackTween.Completed:Connect(function()
-			if entity.Parent then
-				Despawn()
-			end
-		end)
-	else
+	if not hum or not root then
 		Despawn()
+		return
 	end
+
+	local ATTACK_SPEED = 75
+
+	local attackConn
+	attackConn = RunService.Heartbeat:Connect(function(dt)
+		if not entity.Parent or not root.Parent then
+			attackConn:Disconnect()
+			Despawn()
+			return
+		end
+
+		local dir = root.Position - entity.Position
+		local dist = dir.Magnitude
+
+		if dist <= 5 then
+			attackConn:Disconnect()
+
+			if hum.Health > 0 then
+				hum:TakeDamage(math.random(15,20))
+
+				pcall(function()
+					ReplicatedStorage.GameStats["Player_"..player.Name]
+						.Total.DeathCause.Value = "Daze"
+				end)
+
+				if hum.Health <= 0 then
+					pcall(function()
+						local main_game = require(
+							player.PlayerGui.MainUI.Initiator.Main_Game
+						)
+
+						require(
+							player.PlayerGui.MainUI.Initiator.Main_Game
+							.RemoteListener.Jumpscares.Death
+						)(main_game)
+					end)
+				end
+			end
+
+			Despawn()
+			return
+		end
+
+		local moveDistance = math.min(dist, ATTACK_SPEED * dt)
+
+		entity.CFrame = CFrame.new(
+			entity.Position + dir.Unit * moveDistance,
+			root.Position
+		)
+	end)
 end
 
 task.delay(3, function()
@@ -189,11 +180,10 @@ task.delay(3, function()
 		return
 	end
 
-	local startTime = tick()
+	local attackTime = tick() + math.random(3,5)
 
 	local conn
 	conn = RunService.Heartbeat:Connect(function()
-
 		if not active or not entity.Parent then
 			conn:Disconnect()
 			return
@@ -205,7 +195,7 @@ task.delay(3, function()
 			return
 		end
 
-		if tick() - startTime >= math.random(3, 5) then
+		if tick() >= attackTime then
 			conn:Disconnect()
 			Attack()
 		end
