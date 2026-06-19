@@ -1,0 +1,322 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local latestRoom = ReplicatedStorage.GameData:WaitForChild("LatestRoom")
+
+--------------------------------------------------
+-- ROOM
+--------------------------------------------------
+
+local room = workspace.CurrentRooms:FindFirstChild(
+	tostring(latestRoom.Value)
+)
+
+if not room then
+	return
+end
+
+local partsFolder = room:FindFirstChild("Parts")
+if not partsFolder then
+	return
+end
+
+--------------------------------------------------
+-- GET FLOORS
+--------------------------------------------------
+
+local floors = {}
+
+for _, v in ipairs(partsFolder:GetDescendants()) do
+	if v:IsA("BasePart") and v.Name == "Floor" then
+		table.insert(floors, v)
+	end
+end
+
+if #floors == 0 then
+	return
+end
+
+--------------------------------------------------
+-- SAFE POSITION CHECK
+--------------------------------------------------
+
+local function IsPositionSafe(pos)
+	local overlap = OverlapParams.new()
+	overlap.FilterType = Enum.RaycastFilterType.Blacklist
+
+	local character = player.Character
+	if character then
+		overlap.FilterDescendantsInstances = {character}
+	end
+
+	local nearbyParts = workspace:GetPartBoundsInBox(
+		CFrame.new(pos),
+		Vector3.new(8,8,8),
+		overlap
+	)
+
+	for _, p in ipairs(nearbyParts) do
+		if p.CanCollide
+		and p.Name ~= "Floor" then
+			return false
+		end
+	end
+
+	return true
+end
+
+--------------------------------------------------
+-- FIND SPAWN POSITION
+--------------------------------------------------
+
+local spawnPos
+
+for _ = 1,100 do
+	local floor = floors[math.random(1,#floors)]
+	local x =
+		(math.random() - 0.5)
+		* floor.Size.X
+		* 0.8
+
+	local z =
+		(math.random() - 0.5)
+		* floor.Size.Z
+		* 0.8
+
+	local pos =
+		(floor.CFrame * CFrame.new(x,7,z)).Position
+
+	if IsPositionSafe(pos) then
+		spawnPos = pos
+		break
+	end
+end
+
+if not spawnPos then
+	return
+end
+
+--------------------------------------------------
+-- PART
+--------------------------------------------------
+
+local part = Instance.new("Part")
+part.Name = "BlackSmokeTrap"
+part.Size = Vector3.new(1,1,1)
+part.Transparency = 1
+part.Anchored = true
+part.CanCollide = false
+part.CanTouch = false
+part.CanQuery = false
+part.Position = spawnPos
+part.Parent = workspace
+
+--------------------------------------------------
+-- ATTACHMENT
+--------------------------------------------------
+
+local attachment = Instance.new("Attachment")
+attachment.Parent = part
+
+--------------------------------------------------
+-- MAIN PARTICLE
+--------------------------------------------------
+
+local particle = Instance.new("ParticleEmitter")
+particle.Parent = attachment
+particle.Texture = "rbxassetid://87820497736942"
+particle.Rate = 300
+particle.Lifetime = NumberRange.new(0.1)
+particle.Speed = NumberRange.new(0)
+particle.Size = NumberSequence.new(6)
+particle.Rotation = NumberRange.new(-1,1)
+particle.RotSpeed = NumberRange.new(0)
+particle.SpreadAngle = Vector2.new(0,0)
+
+--------------------------------------------------
+-- BLACK SMOKE
+--------------------------------------------------
+
+local smoke = Instance.new("Smoke")
+smoke.Parent = part
+smoke.Color = Color3.new(0,0,0)
+smoke.Size = 5
+smoke.Opacity = 0.7
+smoke.RiseVelocity = 1
+smoke.Enabled = true
+
+--------------------------------------------------
+-- REMOVE TOOL ONCE
+--------------------------------------------------
+
+local toolTriggered = false
+
+local function GetAllTools()
+	local tools = {}
+
+	local backpack = player:FindFirstChildOfClass("Backpack")
+
+	if backpack then
+		for _, v in ipairs(backpack:GetChildren()) do
+			if v:IsA("Tool") then
+				table.insert(tools, v)
+			end
+		end
+	end
+
+	local character = player.Character
+
+	if character then
+		for _, v in ipairs(character:GetChildren()) do
+			if v:IsA("Tool") then
+				table.insert(tools, v)
+			end
+		end
+	end
+
+	return tools
+end
+
+--------------------------------------------------
+-- TOOL REMOVER
+--------------------------------------------------
+
+local heartbeatConnection
+
+heartbeatConnection = RunService.Heartbeat:Connect(function()
+	if toolTriggered then
+		return
+	end
+
+	local character = player.Character
+	if not character then
+		return
+	end
+
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		return
+	end
+
+	local distance =
+		(hrp.Position - part.Position).Magnitude
+
+	if distance <= 8 then
+		toolTriggered = true
+
+		local tools = GetAllTools()
+
+		if #tools > 0 then
+			local tool = tools[math.random(1,#tools)]
+
+			if tool and tool.Parent then
+				tool:Destroy()
+			end
+		end
+	end
+end)
+
+--------------------------------------------------
+-- GOLD DRAIN
+--------------------------------------------------
+
+task.spawn(function()
+	local function GetGoldLabel()
+		local playerGui = player:FindFirstChild("PlayerGui")
+		if not playerGui then
+			return nil
+		end
+
+		local topbarUI = playerGui:FindFirstChild("TopbarUI")
+		if not topbarUI then
+			return nil
+		end
+
+		local topbar = topbarUI:FindFirstChild("Topbar")
+		if not topbar then
+			return nil
+		end
+
+		return topbar:FindFirstChild("Gold")
+	end
+
+	local function SyncGoldValues(amount)
+		for _, obj in ipairs(game:GetDescendants()) do
+			if obj:IsA("IntValue") then
+				if obj.Name == "Gold"
+				or obj.Name == "GoldPicked"
+				or obj.Name == "GoldVal" then
+					pcall(function()
+						obj.Value = amount
+					end)
+				end
+			end
+		end
+	end
+
+	while part.Parent do
+		task.wait(0.5)
+		local character = player.Character
+		if not character then
+			continue
+		end
+
+		local hrp = character:FindFirstChild("HumanoidRootPart")
+		if not hrp then
+			continue
+		end
+
+		if (hrp.Position - part.Position).Magnitude > 10 then
+			continue
+		end
+
+		local goldLabel = GetGoldLabel()
+		if not goldLabel
+			or not goldLabel:IsA("TextLabel")
+			or not goldLabel.Visible then
+			continue
+		end
+
+		local text = tostring(goldLabel.Text)
+		text = text:gsub(",", "")
+		text = text:match("%d+")
+
+		local amount = tonumber(text)
+		if not amount then
+			continue
+		end
+
+		if amount <= 0 then
+			SyncGoldValues(0)
+			continue
+		end
+
+		amount -= 5
+
+		goldLabel.Text = tostring(amount)
+		SyncGoldValues(amount)
+	end
+end)
+
+--------------------------------------------------
+-- ROOM CHANGE CLEANUP
+--------------------------------------------------
+
+local roomConnection
+
+roomConnection =
+	latestRoom:GetPropertyChangedSignal("Value"):Connect(function()
+		if heartbeatConnection then
+			heartbeatConnection:Disconnect()
+		end
+
+		if roomConnection then
+			roomConnection:Disconnect()
+		end
+
+		if part and part.Parent then
+			part:Destroy()
+		end
+	end)
