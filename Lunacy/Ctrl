@@ -1,0 +1,222 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local latestRoom = ReplicatedStorage.GameData:WaitForChild("LatestRoom")
+
+local room = workspace.CurrentRooms:FindFirstChild(tostring(latestRoom.Value))
+if not room then return end
+
+local pathfind = room:FindFirstChild("PathfindNode")
+if not pathfind then return end
+
+local maxNumber = 0
+
+for _,v in ipairs(pathfind:GetChildren()) do
+	local n = tonumber(v.Name)
+
+	if n and n > maxNumber then
+		maxNumber = n
+	end
+end
+
+local middle = math.max(1, math.floor(maxNumber / 2))
+
+local node = pathfind:FindFirstChild(tostring(middle))
+if not node then return end
+
+local model = game:GetObjects("rbxassetid://115367508697896")[1]
+if not model then return end
+
+model.Parent = workspace
+model.Name = "Ctrl"
+
+local rush = model:FindFirstChild("RushNew", true)
+	or model:FindFirstChildWhichIsA("BasePart", true)
+
+if not rush then
+	model:Destroy()
+	return
+end
+
+rush.Anchored = true
+rush.CanCollide = false
+rush.Size = Vector3.new(5,5,5)
+rush.CFrame = node.CFrame + Vector3.new(0,5,0)
+
+local att = rush:FindFirstChild("Attachment")
+
+if att then
+	local footsteps = rush:FindFirstChild("Footsteps")
+
+	if footsteps then
+		footsteps.SoundId = "rbxassetid://17838293412"
+		footsteps.Volume = 1
+		footsteps.RollOffMaxDistance = 150
+		footsteps.RollOffMinDistance = 50
+		footsteps.PlaybackSpeed = 0.5
+	end
+
+	local playSound = rush:FindFirstChild("PlaySound")
+
+	if playSound then
+		playSound.SoundId = "rbxassetid://76816757966116"
+		playSound.Volume = 3
+		playSound.RollOffMaxDistance = 50
+		playSound.RollOffMinDistance = 30
+		playSound.PlaybackSpeed = 0.5
+	end
+
+	for _,v in ipairs(att:GetDescendants()) do
+		if v:IsA("ParticleEmitter") and v.Name == "ParticleEmitter" then
+			v.Texture = "rbxassetid://114026338593468"
+			v.Brightness = 10
+			v.Lifetime = NumberRange.new(0.1,0.5)
+			v.Size = NumberSequence.new(4)
+			v.Rate = 1000
+			v.Rotation = NumberRange.new(-1,1)
+
+		elseif v:IsA("ParticleEmitter") and v.Name == "Black" then
+			v.Texture = "rbxassetid://114026338593468"
+			v.Enabled = true
+			v.Brightness = 0
+			v.Lifetime = NumberRange.new(10)
+
+			v.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0,3),
+				NumberSequenceKeypoint.new(1,6)
+			})
+
+			v.Speed = NumberRange.new(0,150)
+		end
+	end
+
+	local indicate = rush:FindFirstChild("indicate")
+	if indicate then
+		indicate:Destroy()
+	end
+
+	local lights = {}
+
+	for _,v in ipairs(att:GetChildren()) do
+		if v:IsA("PointLight") then
+			table.insert(lights,v)
+		end
+	end
+
+	for i = 2,#lights do
+		lights[i]:Destroy()
+	end
+
+	if lights[1] then
+		lights[1].Brightness = 2
+		lights[1].Range = 12
+		lights[1].Color = Color3.fromRGB(8,230,255)
+	end
+end
+
+local keys = {
+	W = false,
+	A = false,
+	S = false,
+	D = false
+}
+
+local function SetKey(code,state)
+	if code == Enum.KeyCode.W then
+		keys.W = state
+	elseif code == Enum.KeyCode.A then
+		keys.A = state
+	elseif code == Enum.KeyCode.S then
+		keys.S = state
+	elseif code == Enum.KeyCode.D then
+		keys.D = state
+	end
+end
+
+local beganConnection = UserInputService.InputBegan:Connect(function(input,gpe)
+	if gpe then return end
+	SetKey(input.KeyCode,true)
+end)
+
+local endedConnection = UserInputService.InputEnded:Connect(function(input)
+	SetKey(input.KeyCode,false)
+end)
+
+local invertConnection
+
+invertConnection = RunService.RenderStepped:Connect(function()
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local moveDir
+
+	local isMobile =
+		UserInputService.TouchEnabled
+		and not UserInputService.KeyboardEnabled
+
+	if isMobile then
+		local raw = humanoid.MoveDirection
+
+		if raw.Magnitude > 0 then
+			moveDir = -raw.Unit
+		else
+			moveDir = Vector3.zero
+		end
+
+	else
+		local look = camera.CFrame.LookVector
+		local right = camera.CFrame.RightVector
+
+		local forward = Vector3.new(look.X,0,look.Z)
+		local side = Vector3.new(right.X,0,right.Z)
+
+		if forward.Magnitude < 0.01 or side.Magnitude < 0.01 then
+			return
+		end
+
+		forward = forward.Unit
+		side = side.Unit
+
+		moveDir = Vector3.zero
+
+		if keys.W then moveDir -= forward end
+		if keys.S then moveDir += forward end
+
+		if keys.A then moveDir += side end
+		if keys.D then moveDir -= side end
+	end
+
+	if moveDir.Magnitude > 0 then
+		humanoid:Move(moveDir.Unit,false)
+	else
+		humanoid:Move(Vector3.zero,false)
+	end
+end)
+
+local function Cleanup()
+	if invertConnection then
+		invertConnection:Disconnect()
+	end
+
+	if beganConnection then
+		beganConnection:Disconnect()
+	end
+
+	if endedConnection then
+		endedConnection:Disconnect()
+	end
+
+	if model then
+		model:Destroy()
+	end
+end
+
+latestRoom:GetPropertyChangedSignal("Value"):Connect(Cleanup)
+model.Destroying:Connect(Cleanup)
