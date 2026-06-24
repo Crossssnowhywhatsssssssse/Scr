@@ -143,7 +143,7 @@ end
 local active = true
 
 local pullRadius = 100
-local pullForce = 11
+local pullForce = 8
 
 local pullConnection
 
