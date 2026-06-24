@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local CurrentRooms = workspace:WaitForChild("CurrentRooms")
+local LatestRoom = ReplicatedStorage.GameData:WaitForChild("LatestRoom")
 
 --------------------------------------------------
 -- LOAD MODEL
@@ -33,7 +34,7 @@ if not mainPart then
 	return
 end
 
-for _,v in ipairs(obj:GetDescendants()) do
+for _, v in ipairs(obj:GetDescendants()) do
 	if v:IsA("BasePart") then
 		v.Anchored = true
 		v.CanCollide = false
@@ -41,53 +42,7 @@ for _,v in ipairs(obj:GetDescendants()) do
 end
 
 --------------------------------------------------
--- ROOMS
---------------------------------------------------
-
-local rooms = {}
-
-for _,room in ipairs(CurrentRooms:GetChildren()) do
-	local num = tonumber(room.Name)
-	if num then
-		table.insert(rooms,{
-			Number = num,
-			Room = room
-		})
-	end
-end
-
-table.sort(rooms,function(a,b)
-	return a.Number < b.Number
-end)
-
-if #rooms == 0 then
-	obj:Destroy()
-	return
-end
-
---------------------------------------------------
--- SPAWN
---------------------------------------------------
-
-local firstRoom = rooms[1].Room
-
-if not firstRoom:FindFirstChild("RoomEntrance") then
-	obj:Destroy()
-	return
-end
-
-local spawnCF =
-	firstRoom.RoomEntrance.CFrame
-	* CFrame.new(0,2,0)
-
-if obj:IsA("Model") then
-	obj:PivotTo(spawnCF)
-else
-	mainPart.CFrame = spawnCF
-end
-
---------------------------------------------------
--- EFFECT
+-- EFFECTS
 --------------------------------------------------
 
 local color = Instance.new("ColorCorrectionEffect")
@@ -112,70 +67,74 @@ silence:Play()
 Debris:AddItem(silence,10)
 
 --------------------------------------------------
--- KILL SYSTEM
+-- GET ROOMS
 --------------------------------------------------
 
-local active = true
+local function GetRooms()
+	local rooms = {}
 
-task.spawn(function()
-	while active and obj.Parent do
-		task.wait(0.1)
-		local char = LocalPlayer.Character
-		if char then
-		
-			local hrp =
-				char:FindFirstChild("HumanoidRootPart")
+	for _, room in ipairs(CurrentRooms:GetChildren()) do
+		local num = tonumber(room.Name)
 
-			local hum =
-				char:FindFirstChildOfClass("Humanoid")
-
-			if hrp and hum and hum.Health > 0 then
-				local dist =
-					(hrp.Position -
-					mainPart.Position).Magnitude
-
-				if dist <= 50 then
-					if not (char:GetAttribute("Crouching") or char:GetAttribute("Hiding")) then
-						hum.Health = 0
-
-						pcall(function()
-							game.ReplicatedStorage
-							.GameStats[
-								"Player_" ..
-								LocalPlayer.Name
-							]
-							.Total.DeathCause.Value =
-							"Obess"
-						end)
-						
-						pcall(function()
-						local main_game = require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
-                                require(game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game.RemoteListener.Jumpscares.Death)(main_game)
-                        end)
-                        
-						break
-					end
-				end
-			end
+		if num then
+			table.insert(rooms,{
+				Number = num,
+				Room = room
+			})
 		end
 	end
-end)
 
-local MoveSpeed = 60
+	table.sort(rooms,function(a,b)
+		return a.Number < b.Number
+	end)
 
---------------------------------------------------
--- MOVE FUNCTION
---------------------------------------------------
-
-local function GetCurrentCF()
-	if obj:IsA("Model") then
-		return obj:GetPivot()
-	else
-		return mainPart.CFrame
-	end
+	return rooms
 end
 
-local function SetCurrentCF(cf)
+local rooms = GetRooms()
+
+if #rooms == 0 then
+	obj:Destroy()
+	return
+end
+
+--------------------------------------------------
+-- SPAWN
+--------------------------------------------------
+
+local firstRoom = rooms[1].Room
+
+local entrance =
+	firstRoom:FindFirstChild("RoomEntrance")
+
+if not entrance then
+	obj:Destroy()
+	return
+end
+
+local spawnCF =
+	entrance.CFrame
+	* CFrame.new(0,2,0)
+
+if obj:IsA("Model") then
+	obj:PivotTo(spawnCF)
+else
+	mainPart.CFrame = spawnCF
+end
+
+--------------------------------------------------
+-- POSITION FUNCTIONS
+--------------------------------------------------
+
+local function GetCF()
+	if obj:IsA("Model") then
+		return obj:GetPivot()
+	end
+
+	return mainPart.CFrame
+end
+
+local function SetCF(cf)
 	if not obj.Parent then
 		return
 	end
@@ -187,94 +146,314 @@ local function SetCurrentCF(cf)
 	end
 end
 
+--------------------------------------------------
+-- WALL CHECK
+--------------------------------------------------
+
+local function CanSeePlayer()
+	local character = LocalPlayer.Character
+
+	if not character then
+		return false
+	end
+
+	local hrp =
+		character:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not hrp then
+		return false
+	end
+
+	local params = RaycastParams.new()
+	params.FilterType =
+		Enum.RaycastFilterType.Exclude
+
+	params.FilterDescendantsInstances = {
+		obj,
+		character
+	}
+
+	local result = workspace:Raycast(
+		mainPart.Position,
+		hrp.Position - mainPart.Position,
+		params
+	)
+
+	if not result then
+		return true
+	end
+
+	return result.Instance:IsDescendantOf(character)
+end
+
+--------------------------------------------------
+-- KILL SYSTEM
+--------------------------------------------------
+
+local active = true
+
+task.spawn(function()
+
+	while active and obj.Parent do
+
+		task.wait(0.1)
+
+		local character =
+			LocalPlayer.Character
+
+		if not character then
+			continue
+		end
+
+		local hrp =
+			character:FindFirstChild(
+				"HumanoidRootPart"
+			)
+
+		local hum =
+			character:FindFirstChildOfClass(
+				"Humanoid"
+			)
+
+		if not hrp or not hum then
+			continue
+		end
+
+		if hum.Health <= 0 then
+			continue
+		end
+
+		local dist =
+			(hrp.Position -
+			mainPart.Position).Magnitude
+
+		if dist <= 50
+		and CanSeePlayer() then
+
+			if not (
+				character:GetAttribute("Crouching")
+				or character:GetAttribute("Hiding")
+			) then
+
+				hum.Health = 0
+
+				pcall(function()
+					ReplicatedStorage
+					.GameStats[
+						"Player_" ..
+						LocalPlayer.Name
+					]
+					.Total
+					.DeathCause.Value =
+					"Obess"
+				end)
+
+				pcall(function()
+
+					local main_game =
+						require(
+							LocalPlayer
+							.PlayerGui
+							.MainUI
+							.Initiator
+							.Main_Game
+						)
+
+					require(
+						LocalPlayer
+						.PlayerGui
+						.MainUI
+						.Initiator
+						.Main_Game
+						.RemoteListener
+						.Jumpscares
+						.Death
+					)(main_game)
+
+				end)
+
+				break
+			end
+		end
+	end
+end)
+
+--------------------------------------------------
+-- MOVE
+--------------------------------------------------
+
+local MoveSpeed = 50
+
 local function MoveTo(targetCF)
-	local reached = false
 
-	while not reached and obj.Parent do
-		local currentCF = GetCurrentCF()
+	while obj.Parent do
 
-		local currentPos = currentCF.Position
-		local targetPos = targetCF.Position
+		local currentCF = GetCF()
 
-		local offset = targetPos - currentPos
-		local distance = offset.Magnitude
+		local offset =
+			targetCF.Position -
+			currentCF.Position
+
+		local distance =
+			offset.Magnitude
 
 		if distance <= 0.1 then
-			SetCurrentCF(targetCF)
-			reached = true
+			SetCF(targetCF)
 			break
 		end
 
-		local dt = RunService.Heartbeat:Wait()
-		local moveAmount = MoveSpeed * dt
+		local dt =
+			RunService.Heartbeat:Wait()
 
-		if moveAmount >= distance then
-			SetCurrentCF(targetCF)
-			reached = true
+		local step =
+			MoveSpeed * dt
+
+		if step >= distance then
+
+			SetCF(targetCF)
+
+			break
+
 		else
-			local alpha = moveAmount / distance
-			local nextCF =
+
+			SetCF(
 				currentCF:Lerp(
 					targetCF,
-					alpha
+					step / distance
 				)
-
-			SetCurrentCF(nextCF)
+			)
 		end
 	end
 end
 
 --------------------------------------------------
--- WAIT
+-- START DELAY
 --------------------------------------------------
 
 task.wait(5)
 
 --------------------------------------------------
--- PATHFIND NODES
+-- GET ROOM NODES
 --------------------------------------------------
 
-for _,roomData in ipairs(rooms) do
-	local room = roomData.Room
+local function GetRoomNodes(room)
 
-	local pathFolders = {}
+	local nodes = {}
 
-	for _,obj2 in ipairs(room:GetChildren()) do
-		if obj2.Name == "PathfindNode" then
-			table.insert(pathFolders,obj2)
-		end
-	end
+	for _, v in ipairs(
+		room:GetDescendants()
+	) do
 
-	for _,folder in ipairs(pathFolders) do
-		local nodes = {}
-		for _,node in ipairs(folder:GetChildren()) do
-			if node:IsA("BasePart") then
-				table.insert(nodes,node)
+		if v:IsA("BasePart") then
+
+			local num =
+				tonumber(v.Name)
+
+			if num
+			and v.Parent
+			and (
+				v.Parent.Name == "PathfindNodes"
+				or v.Parent.Name == "PathfindNode"
+			) then
+
+				table.insert(nodes,v)
+
 			end
 		end
-
-		table.sort(nodes,function(a,b)
-
-			local na = tonumber(a.Name) or 0
-			local nb = tonumber(b.Name) or 0
-
-			return na < nb
-		end)
-
-		for _,node in ipairs(nodes) do
-			MoveTo(
-				node.CFrame *
-				CFrame.new(0,5,0)
-			)
-		end
 	end
 
-	if room:FindFirstChild("RoomExit") then
+	table.sort(nodes,function(a,b)
+
+		return
+			tonumber(a.Name)
+			<
+			tonumber(b.Name)
+
+	end)
+
+	return nodes
+end
+
+--------------------------------------------------
+-- MAIN PATH
+--------------------------------------------------
+
+local currentRoom = 1
+
+while obj.Parent do
+
+	local rooms = GetRooms()
+
+	local roomData =
+		rooms[currentRoom]
+
+	if not roomData then
+
+		local updated = false
+
+		local connection
+
+		connection =
+			CurrentRooms.ChildAdded
+			:Connect(function()
+				updated = true
+			end)
+
+		local start = tick()
+
+		while tick() - start < 3 do
+
+			if updated then
+				break
+			end
+
+			RunService.Heartbeat:Wait()
+		end
+
+		connection:Disconnect()
+
+		if not updated then
+			break
+		end
+
+		continue
+	end
+
+	local room = roomData.Room
+
+	local nodes =
+		GetRoomNodes(room)
+
+	for _, node in ipairs(nodes) do
+
+		if not obj.Parent then
+			break
+		end
+
 		MoveTo(
-			room.RoomExit.CFrame
+			node.CFrame
+			* CFrame.new(0,5,0)
+		)
+	end
+
+	local exit =
+		room:FindFirstChild(
+			"RoomExit"
+		)
+
+	if exit then
+
+		MoveTo(
+			exit.CFrame
 			* CFrame.new(0,2,0)
 		)
 	end
+
+	currentRoom += 1
+
+	RunService.Heartbeat:Wait()
 end
 
 --------------------------------------------------
@@ -283,7 +462,7 @@ end
 
 active = false
 
-if obj then
+if obj and obj.Parent then
 	obj:Destroy()
 end
 
@@ -291,11 +470,7 @@ TweenService:Create(
 	color,
 	TweenInfo.new(10),
 	{
-		TintColor = Color3.fromRGB(
-			255,
-			255,
-			255
-		),
+		TintColor = Color3.new(1,1,1),
 		Saturation = 0,
 		Contrast = 0
 	}
