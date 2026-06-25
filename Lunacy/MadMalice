@@ -1,0 +1,563 @@
+--------------------------------------------------
+-- SERVICES
+--------------------------------------------------
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local CurrentRooms = workspace:WaitForChild("CurrentRooms")
+
+--------------------------------------------------
+-- ENTITY
+--------------------------------------------------
+
+local obj = game:GetObjects("rbxassetid://111405451005039")[1]
+
+if not obj then
+	return
+end
+
+obj.Parent = workspace
+obj.Name = "Mad Malice"
+
+local mainPart =
+	obj:FindFirstChildWhichIsA(
+		"BasePart",
+		true
+	)
+
+if not mainPart then
+	obj:Destroy()
+	return
+end
+
+--------------------------------------------------
+-- MODIFY
+--------------------------------------------------
+
+for _,v in ipairs(obj:GetDescendants()) do
+	if v:IsA("Sound") then
+		v.Volume = 0
+		v:Destroy()
+	end
+
+	if v.Name == "Sounds"
+	or v.Name == "Ambience"
+	or v.Name == "ThumbnailCamera"
+	or v.Name == "unfinished" then
+		v:Destroy()
+	end
+
+	if v:IsA("BasePart") then
+		v.Anchored = true
+		v.CanCollide = false
+	end
+
+	if v.Name == "Black"
+	and v:IsA("ParticleEmitter") then
+		v.Rate = 3000
+		v.Lifetime = NumberRange.new(1,10)
+
+		v.Color = ColorSequence.new(
+			Color3.new(0,0,0)
+		)
+
+		v.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0,5),
+			NumberSequenceKeypoint.new(1,10)
+		})
+	end
+
+	if v.Name == "Conquerrors"
+	and v:IsA("ParticleEmitter") then
+		v.Rate = 3000
+
+		v.Lifetime =
+			NumberRange.new(1,5)
+
+		v.Speed =
+			NumberRange.new(50,100)
+
+		v.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0,0),
+			NumberSequenceKeypoint.new(1,4.5)
+		})
+	end
+
+	if (
+		v.Name == "Face2"
+		or v.Name == "OrbODestruction"
+		or v.Name == "me"
+		or v.Name == "you"
+	)
+	and v:IsA("ParticleEmitter") then
+
+		v:Destroy()
+	end
+
+	if v.Name == "Face1"
+	and v:IsA("ParticleEmitter") then
+
+		v.Squash =
+			NumberSequence.new(0)
+
+		v.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(
+				0,
+				Color3.new(1,1,1)
+			),
+
+			ColorSequenceKeypoint.new(
+				0.7,
+				Color3.new(0,0,0)
+			),
+
+			ColorSequenceKeypoint.new(
+				1,
+				Color3.new(0,0,0)
+			)
+		})
+
+		v.Brightness = 1
+		v.LightEmission = 0
+		v.LightInfluence = 0
+
+		v.Orientation =
+			Enum.ParticleOrientation
+			.FacingCamera
+
+		v.Size =
+			NumberSequence.new(5)
+
+		v.Rate = 1500
+
+		v.Lifetime =
+			NumberRange.new(1,5)
+
+		v.Speed =
+			NumberRange.new(5)
+
+		v.Texture =
+			"rbxassetid://106069037178444"
+	end
+end
+
+--------------------------------------------------
+-- Sound
+--------------------------------------------------
+
+local load = loadstring(game:HttpGet("https://raw.githubusercontent.com/Whatttt23/Custom/main/Sound/Source.lua"))()
+
+local snd = load:Create({
+    Sound = "https://github.com/Whatttt23/Scr/blob/main/NightRoguefix.mp3",
+    Parent = obj:FindFirstChildWhichIsA("BasePart"),
+    Volume = 0.5,
+    PlaybackSpeed = 1,
+    RollOffMaxDistance = 100,
+    RollOffMinDistance = 50,
+    RollOffMode = Enum.RollOffMode.LinearSquare,
+    Looped = true,
+    AutoPlay = true
+})
+
+local snd2 = load:Create({
+    Sound = "https://github.com/Whatttt23/Scr/blob/main/NightRoguefix.mp3",
+    Parent = obj:FindFirstChildWhichIsA("BasePart"),
+    Volume = 0.5,
+    PlaybackSpeed = 0.9,
+    RollOffMaxDistance = 200,
+    RollOffMinDistance = 50,
+    RollOffMode = Enum.RollOffMode.LinearSquare,
+    Looped = true,
+    AutoPlay = true
+})
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = LocalPlayer.PlayerGui
+
+local label = Instance.new("TextLabel")
+label.Parent = gui
+label.BackgroundTransparency = 1
+label.AnchorPoint = Vector2.new(0.5,1)
+label.Position = UDim2.new(0.5,0,0.92,0)
+label.Size = UDim2.new(0.5,0,0.08,0)
+label.Font = Enum.Font.SciFi
+label.Text = "STOP MOVE"
+label.TextScaled = true
+label.TextColor3 = Color3.fromRGB(255,0,0)
+label.TextTransparency = 1
+
+TweenService:Create(
+	label,
+	TweenInfo.new(6),
+	{
+		TextTransparency = 0
+	}
+):Play()
+
+--------------------------------------------------
+-- GET ROOMS
+--------------------------------------------------
+
+local function GetRooms()
+	local rooms = {}
+
+	for _,room in ipairs(
+		CurrentRooms:GetChildren()
+	) do
+
+		local number =
+			tonumber(room.Name)
+
+		if number then
+			table.insert(
+				rooms,
+				room
+			)
+		end
+	end
+
+	table.sort(
+		rooms,
+		function(a,b)
+			return
+				tonumber(a.Name)
+				<
+				tonumber(b.Name)
+		end
+	)
+
+	return rooms
+end
+
+--------------------------------------------------
+-- SPAWN
+--------------------------------------------------
+
+local rooms = GetRooms()
+
+if #rooms == 0 then
+	obj:Destroy()
+	gui:Destroy()
+	return
+end
+
+local firstRoom = rooms[1]
+
+local entrance =
+	firstRoom:FindFirstChild(
+		"RoomEntrance"
+	)
+
+if not entrance then
+	obj:Destroy()
+	gui:Destroy()
+	return
+end
+
+obj:PivotTo(
+	entrance.CFrame *
+	CFrame.new(0,4,0)
+)
+
+--------------------------------------------------
+-- MOVE
+--------------------------------------------------
+
+local SPEED = 35
+
+local function MoveTo(target)
+	while obj.Parent do
+		local current =
+			obj:GetPivot()
+
+		local offset =
+			target.Position -
+			current.Position
+
+		local distance =
+			offset.Magnitude
+
+		if distance <= 0.1 then
+			obj:PivotTo(target)
+			return
+		end
+
+		local dt =
+			RunService.Heartbeat:Wait()
+
+		local move =
+			SPEED * dt
+
+		if move >= distance then
+			obj:PivotTo(target)
+			return
+		end
+		obj:PivotTo(
+			current:Lerp(
+				target,
+				move /
+				distance
+			)
+		)
+	end
+end
+
+--------------------------------------------------
+-- GET NODES
+--------------------------------------------------
+
+local function GetNodes(room)
+	local nodes = {}
+	for _,v in ipairs(
+		room:GetDescendants()
+	) do
+
+		if v:IsA("BasePart")
+		and tonumber(v.Name)
+		and (
+			v.Parent.Name == "PathfindNode"
+			or
+			v.Parent.Name == "PathfindNodes"
+		) then
+			table.insert(
+				nodes,
+				v
+			)
+		end
+	end
+
+	table.sort(
+		nodes,
+		function(a,b)
+			return
+				tonumber(a.Name)
+				<
+				tonumber(b.Name)
+		end
+	)
+	return nodes
+end
+
+--------------------------------------------------
+-- KILL
+--------------------------------------------------
+
+local active = true
+local lastPosition = nil
+
+task.spawn(function()
+	while active and obj.Parent do
+		task.wait(0.05)
+		local char =
+			LocalPlayer.Character
+
+		if not char then
+			lastPosition = nil
+			continue
+		end
+
+		local hrp =
+			char:FindFirstChild(
+				"HumanoidRootPart"
+			)
+
+		local hum =
+			char:FindFirstChildOfClass(
+				"Humanoid"
+			)
+
+		if not hrp
+		or not hum then
+			lastPosition = nil
+			continue
+		end
+
+		local distance =
+			(hrp.Position -
+			mainPart.Position)
+			.Magnitude
+
+		if distance <= 50 then		
+			if not lastPosition then
+				lastPosition =
+					hrp.Position
+			else
+				local moved =
+					(hrp.Position -
+					lastPosition)
+					.Magnitude
+
+				if moved > 0.05 then
+					hum.Health = 0
+
+					pcall(function()
+						ReplicatedStorage
+						.GameStats[
+							"Player_" ..
+							LocalPlayer.Name
+						]
+						.Total
+						.DeathCause
+						.Value =
+						"Mad Malice"
+					end)
+
+					pcall(function()
+						local main_game =
+							require(
+								LocalPlayer
+								.PlayerGui
+								.MainUI
+								.Initiator
+								.Main_Game
+							)
+						require(
+							LocalPlayer
+							.PlayerGui
+							.MainUI
+							.Initiator
+							.Main_Game
+							.RemoteListener
+							.Jumpscares
+							.Death
+						)(main_game)
+					end)
+					break
+				end
+				lastPosition =
+					hrp.Position
+			end
+		else
+			lastPosition = nil
+		end
+	end
+end)
+
+--------------------------------------------------
+-- START DELAY
+--------------------------------------------------
+
+task.wait(1)
+
+--------------------------------------------------
+-- PATHFIND
+--------------------------------------------------
+
+local lastRoomNumber = 0
+
+while obj.Parent do
+	local nextRoom = nil
+	for _,room in ipairs(
+		GetRooms()
+	) do
+
+		local num =
+			tonumber(room.Name)
+
+		if num
+		and num > lastRoomNumber then
+			nextRoom = room
+			lastRoomNumber = num
+			break
+		end
+	end
+
+	if not nextRoom then
+		local added = false
+		local connection
+
+		connection =
+			CurrentRooms.ChildAdded
+			:Connect(function()
+				added = true
+			end)
+
+		local start = tick()
+		while tick() - start < 1 do
+
+			if added then
+				break
+			end
+
+			RunService.Heartbeat:Wait()
+		end
+
+		connection:Disconnect()
+
+		if not added then
+			break
+		end
+
+		continue
+	end
+	
+	local entrance =
+		nextRoom:FindFirstChild(
+			"RoomEntrance"
+		)
+
+	if entrance then
+		MoveTo(
+			entrance.CFrame *
+			CFrame.new(0,4,0)
+		)
+	end
+
+	local nodes =
+		GetNodes(nextRoom)
+
+	for _,node in ipairs(nodes) do
+		MoveTo(
+			node.CFrame *
+			CFrame.new(0,8,0)
+		)
+	end
+
+	local exit =
+		nextRoom:FindFirstChild(
+			"RoomExit"
+		)
+
+	if exit then
+		MoveTo(
+			exit.CFrame *
+			CFrame.new(0,4,0)
+		)
+	end
+end
+
+--------------------------------------------------
+-- DESPAWN
+--------------------------------------------------
+
+active = false
+mainPart.CanCollide = false
+mainPart.Anchored = false
+
+TweenService:Create(
+	label,
+	TweenInfo.new(3),
+	{
+		TextTransparency = 1
+	}
+):Play()
+
+task.wait(5)
+
+if gui then
+	gui:Destroy()
+end
+
+if obj then
+	obj:Destroy()
+end
