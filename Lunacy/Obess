@@ -39,6 +39,19 @@ for _, v in ipairs(obj:GetDescendants()) do
 		v.Anchored = true
 		v.CanCollide = false
 	end
+	if v.Name == "ParticleEmitter" and v:IsA("ParticleEmitter") then
+	    v.Texture = "rbxassetid://134865389687746"
+	    v.Rate = 200
+	    v.Acceleration = Vector3.new(0, 0, 0)
+	    v.LockedToPart = true
+	    v.Lifetime = NumberRange.new(0, 3)
+	    v.Speed = NumberRange.new(0, 0)
+	end
+	if v.Name == "Smoke" and v:IsA("ParticleEmitter") then
+	    v.Rate = 999999
+	    v.Lifetime = NumberRange.new(0.1, 10)
+	    v.Speed = NumberRange.new(0, 10)
+	end
 end
 
 --------------------------------------------------
@@ -114,7 +127,7 @@ end
 
 local spawnCF =
 	entrance.CFrame
-	* CFrame.new(0,2,0)
+	* CFrame.new(0,3,0)
 
 if obj:IsA("Model") then
 	obj:PivotTo(spawnCF)
@@ -195,9 +208,7 @@ end
 local active = true
 
 task.spawn(function()
-
 	while active and obj.Parent do
-
 		task.wait(0.1)
 
 		local character =
@@ -403,7 +414,7 @@ while obj.Parent do
 
 		local start = tick()
 
-		while tick() - start < 3 do
+		while tick() - start < 1 do
 
 			if updated then
 				break
@@ -434,7 +445,7 @@ while obj.Parent do
 
 		MoveTo(
 			node.CFrame
-			* CFrame.new(0,5,0)
+			* CFrame.new(0,6,0)
 		)
 	end
 
@@ -447,7 +458,7 @@ while obj.Parent do
 
 		MoveTo(
 			exit.CFrame
-			* CFrame.new(0,2,0)
+			* CFrame.new(0,3,0)
 		)
 	end
 
