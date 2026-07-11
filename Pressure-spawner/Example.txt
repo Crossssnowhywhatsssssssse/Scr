@@ -1,4 +1,4 @@
-local spawnEntity = loadstring(game:HttpGet(""))()
+local spawnEntity = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crossssnowhywhatsssssssse/Scr/main/Pressure-spawner/Spawner.txt"))()
 
 spawnEntity({
     AssetId = "rbxassetid://17071491370",
