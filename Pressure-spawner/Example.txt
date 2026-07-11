@@ -1,0 +1,69 @@
+local spawnEntity = loadstring(game:HttpGet(""))()
+
+spawnEntity({
+    AssetId = "rbxassetid://17071491370",
+    EntityName = "Smiler",
+    MoveSpeed = 890,
+    HitboxRadius = 90,
+    ShakeRadius = 100,
+    DamageAmount = 100,    
+    InstantKill = true,
+    ConstantBloodSucking = false,
+    DelayEachDamage = 0.1,
+    
+    DelayWhenSpawned = true,     
+    Delay = 15, 
+    Rebounding = true,  
+    Reversed = false, 
+    MinRebounds = 1,   
+    MaxRebounds = 1,
+    DelayEachRebound = 0,
+    WallPenetrating = false,
+    IgnoreHiding = false,
+    RoomLimits = false,
+    RoomLimitValue = 5,
+    EntityLifeTime = "Forever",
+    
+    YOffset = Vector3.new(0, 2, 0),
+    DespawnYOffset = Vector3.new(0, 30, 0),
+    Tolerance = 0.1,
+    FlickerSpeed = 75,
+    MaxDarkness = 0.2,
+    ShakeIntensity = 2.5,
+    ShakeSpeedMultiplier = 1.5,
+    LightFlickerTime = 10,       
+    
+    EnableFlicker = true,
+    EnableShake = true,
+    EnableBlackout = true,
+    EnableBreakLights = true,
+    
+    GithubSound = "",         
+    PlayGitSoundWhenSpawned = false, 
+    SoundVolume = 1,        
+    SoundPlaybackSpeed = 1,
+
+    LightBreakRange = 35,                          
+    LightDarkenPercent = 0.11,                
+    LightAutoScanInterval = 0.1,              
+    
+    LightSoundId = "rbxassetid://13303926122", 
+    LightSoundVolume = 2,                   
+    LightSoundDistance = 150,                 
+    
+    LightParticleTexture = "rbxassetid://257173628", 
+    LightParticleDuration = 0.3,
+    
+    DeathImage = "rbxassetid://11417375410",
+    DeathName = "Smiler",
+    DeathNotes = "I Rember that smile…",
+    DeathImageColor = Color3.fromRGB(255, 255, 255), -- Mặc định là trắng (giữ nguyên màu ảnh)
+    
+    OnSpawn = function() end,
+    OnMoveStart = function() end,
+    OnRoomEnter = function(roomName) end,
+    OnDamagePlayer = function() end,
+    OnKillPlayer = function() end,
+    OnDespawning = function() end,
+    OnDespawned = function() end,
+})
