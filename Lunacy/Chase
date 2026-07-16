@@ -1,8 +1,8 @@
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 
-local function getGitImage(url,name)
-	local file = name..".png"
+local function getGitImage(url, name)
+	local file = name .. ".png"
 
 	if getcustomasset and writefile and isfile then
 		if not isfile(file) then
@@ -28,7 +28,7 @@ local function getGitImage(url,name)
 end
 
 local PARTICLE_TEXTURE = getGitImage(
-	"https://raw.githubusercontent.com/Whatttt23/Scr/main/Kh%C3%B4ng%20C%C3%B3%20Ti%C3%AAu%20%C4%90%E1%BB%81244_20260606220200.png",
+	"https://raw.githubusercontent.com/Whatttt23/Scr/main/Kh%C3%B4ng%20C%C3%B3%20Ti%C3%AAu%20%C4%90%E1%BB%81273_20260627185709.png",
 	"seek_particle"
 )
 
@@ -47,33 +47,23 @@ local function HideObject(obj)
 	end
 end
 
-local function GetHead(seek)
-	for _,v in ipairs(seek:GetDescendants()) do
-		if v:IsA("BasePart") and v.Name == "Head" then
-			return v
-		end
-	end
-
-	return nil
-end
-
 local function SetupSeek(seek)
 	if ActiveSeek[seek] then
 		return
 	end
+	
+	ActiveSeek[seek] = true
 
-	local head = GetHead(seek)
-
-	if not head then
-		return
-	end
-
-	for _,v in ipairs(seek:GetDescendants()) do
+	for _, v in ipairs(seek:GetDescendants()) do
 		HideObject(v)
+
+		if v.Name == "Scream" or v.Name == "FootstepsFar" then
+			v:Destroy()
+		end
 	end
 
 	local part = Instance.new("Part")
-	part.Name = "_SeekParticlePart"
+	part.Name = "SeekParticlePart"
 	part.Size = Vector3.new(5,5,5)
 	part.Transparency = 1
 	part.Anchored = true
@@ -89,18 +79,35 @@ local function SetupSeek(seek)
 	emitter.Parent = attachment
 	emitter.Texture = PARTICLE_TEXTURE
 	emitter.Enabled = true
-	emitter.Rate = 5000
-	emitter.Lifetime = NumberRange.new(0.1)
+	emitter.LockedToPart = true
+	emitter.Rate = 9999
+	emitter.Lifetime = NumberRange.new(0.1, 10)
 	emitter.Speed = NumberRange.new(0)
 	emitter.Size = NumberSequence.new(5)
 	emitter.Transparency = NumberSequence.new(0)
 	emitter.LightEmission = 0
-	emitter.Brightness = 0.5
+	emitter.Brightness = 0.3
+	emitter.Rotation = NumberRange.new(-5, 5)
+	emitter.SpreadAngle = Vector2.new(0,0)
+
+	local addConn
+	addConn = seek.DescendantAdded:Connect(function(obj)
+		HideObject(obj)
+
+		if obj.Name == "Scream" or obj.Name == "FootstepsFar" then
+			obj:Destroy()
+		end
+	end)
 
 	local hb
+
 	hb = RunService.Heartbeat:Connect(function()
-		if not seek.Parent or not head.Parent then
+		if not seek.Parent then
 			hb:Disconnect()
+
+			if addConn then
+				addConn:Disconnect()
+			end
 
 			if part then
 				part:Destroy()
@@ -110,33 +117,149 @@ local function SetupSeek(seek)
 			return
 		end
 
-		part.CFrame = head.CFrame
+		local success, cf = pcall(function()
+			return seek:GetPivot()
+		end)
+
+		if success then
+			part.CFrame = cf * CFrame.new(0, 2, 0)
+		end
 	end)
 
-	local addConn
-	addConn = seek.DescendantAdded:Connect(function(obj)
-		HideObject(obj)
-	end)
+	seek.AncestryChanged:Connect(function(_, parent)
+		if parent == nil then
+			if hb then
+				hb:Disconnect()
+			end
 
-	ActiveSeek[seek] = {
-		Heartbeat = hb,
-		Connection = addConn,
-		Part = part
-	}
+			if addConn then
+				addConn:Disconnect()
+			end
+
+			if part then
+				part:Destroy()
+			end
+
+			ActiveSeek[seek] = nil
+		end
+	end)
 end
 
 task.spawn(function()
-	while true do
-		for _,obj in ipairs(Workspace:GetDescendants()) do
-			if obj.Name == "SeekMovingNewClone" then
-				SetupSeek(obj)
+	local cache = {}
 
-				for _,v in ipairs(obj:GetDescendants()) do
-					HideObject(v)
+	local function getGitSoundId(url, name)
+		if cache[name] then
+			return cache[name]
+		end
+
+		if getcustomasset
+		and writefile
+		and isfile then
+			local file =
+				name .. ".mp3"
+
+			if not isfile(file) then
+				writefile(
+					file,
+					game:HttpGet(url)
+				)
+			end
+
+			local id =
+				getcustomasset(file)
+
+			cache[name] = id
+
+			task.spawn(function()
+				task.wait(1)
+				if delfile
+				and isfile(file) then
+					pcall(
+						delfile,
+						file
+					)
+				end
+			end)
+
+			return id
+		end
+
+		return nil
+	end
+
+	local SOUND =
+		getGitSoundId(
+			"https://raw.githubusercontent.com/Whatttt23/Scr/main/StandbyLoopFix.mp3",
+			"seek_standby"
+		)
+
+	local function SetupSound(seek)
+		for _,v in ipairs(seek:GetDescendants()) do
+			if v.Name == "Footsteps"
+			and v:IsA("Sound") then
+				v.PlaybackSpeed = 1
+				v.Volume = 0.5
+				v.RollOffMinDistance = 50
+				v.RollOffMaxDistance = 200
+				if SOUND then
+					v.SoundId = SOUND
+				end
+				for _,child in ipairs(v:GetChildren()) do
+				    if child:IsA("SoundEffect") then
+				        child:Destroy()
+				    end
 				end
 			end
 		end
 
-		task.wait(0.5)
+		seek.DescendantAdded:Connect(function(v)
+			if v.Name == "Footsteps"
+			and v:IsA("Sound") then
+				v.PlaybackSpeed = 1
+				v.Volume = 0.5
+				v.RollOffMinDistance = 50
+				v.RollOffMaxDistance = 200
+				if SOUND then
+					v.SoundId = SOUND
+				end
+				for _,child in ipairs(v:GetChildren()) do
+				    if child:IsA("SoundEffect") then
+				        child:Destroy()
+				    end
+				end
+			end
+		end)
+	end
+
+	for _,obj in ipairs(workspace:GetDescendants()) do
+		if obj.Name == "SeekMovingNewClone" then
+			SetupSound(obj)
+		end
+	end
+
+	workspace.DescendantAdded:Connect(function(obj)
+		if obj.Name == "SeekMovingNewClone" or obj.Name == "SeekMoving" then
+			task.wait()
+			if obj.Parent then
+				SetupSound(obj)
+			end
+		end
+	end)
+end)
+
+for _, obj in ipairs(Workspace:GetDescendants()) do
+	if obj.Name == "SeekMovingNewClone" or obj.Name == "SeekMoving" then
+		SetupSeek(obj)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+	if obj.Name == "SeekMovingNewClone" or obj.Name == "SeekMoving" then
+		task.wait()
+
+		if obj.Parent then
+			SetupSeek(obj)
+		end
 	end
 end)
